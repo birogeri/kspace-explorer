@@ -107,12 +107,12 @@ This app was directly influenced by the article of D. Moratal et al. [1], howeve
 |:--:|
 |*A screenshot from k-Space Tutorial by D. Moratal et al.*|
 
-## Software Requirements
+### Software Requirements
 
  Matlab is a requirement for many similar apps. Matlab is proprietary software and can be costly to purchase a license.
  K-space Explorer only uses free software to make it more accessible.
 
-## User Interface
+### User Interface
 
 The aim of K-space Explorer is to provide a smooth, modern UI with familiar tools and instant response whenever possible. Updates happen real time so immediate feedback is given for the effect of the changes.
 
@@ -120,7 +120,7 @@ The aim of K-space Explorer is to provide a smooth, modern UI with familiar tool
 |:--:|
 | *A real-life herringbone artefact and the corresponding k-space* |
 
-## Free and Open Source
+### Free and Open Source
 
 To get a deeper understanding of the inner workings the code can be inspected. In-line documentation can help understanding the mathematical principles behind various interactions.
 
