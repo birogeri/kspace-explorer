@@ -1,0 +1,17 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+    <file>ui.qml</file>
+	<file>qtquickcontrols2.conf</file>
+	<file>images/tune-vertical.png</file>
+	<file>images/folder-open.png</file>
+	<file>images/save.png</file>
+	<file>images/layout-footer.png</file>
+	<file>images/settings.png</file>
+	<file>images/skip-backward.png</file>
+	<file>images/play-pause.png</file>
+	<file>images/undo-variant.png</file>
+	<file>images/plus-thick.png</file>
+	<file>images/trash-can.png</file>
+	<file>images/icon.ico</file>
+</qresource>
+</RCC>
