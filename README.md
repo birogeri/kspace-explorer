@@ -135,6 +135,13 @@ To get a deeper understanding of the inner workings the code can be inspected. I
 * Multiple languages
 * CLAHE enhanchement
 
+## Disclaimer and limitations
+
+This software is not intended for medical use. 
+Even if a scanner original DICOM file is used, the resulting k-space is not equivalent
+to the scanner raw data as it contains all post-acquisition modifications
+applied by the scanner software.
+
 ```references
     [1] Moratal, D., Vallés-Luch, A., Martí-Bonmati, L., & Brummers, M. E. (2008). k-Space tutorial: An MRI educational tool for a better understanding of k-space. Biomedical Imaging and Intervention Journal, 4(1). http://doi.org/10.2349/biij.4.1.e15
 
