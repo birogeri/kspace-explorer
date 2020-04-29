@@ -50,7 +50,7 @@ If you find it useful please consider [buying me a coffee with PayPal](https://w
 Navigate to the folder that contains and run it by typing the command below
 
 ``` shell
-    python3 kspace.py
+    python kspace.py
 ```
 
 **Alternatively (on Windows)**
@@ -60,7 +60,7 @@ just open the folder where the app was extracted and:
 * Click the address bar (the line that looks something 
 like this: *"This PC > Downloads > kspace-explorer-master"*)
 * Delete the address and type ```cmd``` and hit Enter
-* A window should appear and you can now type ```python3 kspace.py```
+* A window should appear and you can now type ```python kspace.py```
 ## **Usage**
 
 KSE automatically loads a default image but you can
