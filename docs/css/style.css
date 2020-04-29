@@ -18,6 +18,10 @@ body {
   margin: 0;
   color: gray;
   background: whitesmoke; }
+  
+html {
+	scroll-behavior: smooth;
+}
 
 #page {
   position: relative;
@@ -34,7 +38,7 @@ a {
   -o-transition: 0.5s;
   transition: 0.5s; }
   a:hover, a:active, a:focus {
-    color: #4aca85;
+    color: #55e895;
     outline: none;
     text-decoration: none; }
 
@@ -59,6 +63,11 @@ h1, h2, h3, h4, h5, h6, figure {
 ::selection {
   color: #fff;
   background: #4aca85; }
+  
+.colorlib-work-featured,
+#colorlib-donate {
+  padding: 2em 0;
+  clear: both; }
 
 .mobile-img {
   background-size: cover;
@@ -145,13 +154,12 @@ h1, h2, h3, h4, h5, h6, figure {
   border-right: none; }
 
 .colorlib-featured {
-  padding-bottom: 3em;
+  padding-bottom: 1em;
   width: 100%; }
   .colorlib-featured .featured-wrap {
-    margin-top: -7em; }
+    margin-top: -8em; }
   .colorlib-featured .featured-entry img {
     -webkit-box-shadow: 0px 3px 19px -9px rgba(0, 0, 0, 0.75);
-    -moz-box-shadow: 0px 3px 19px -9px rgba(0, 0, 0, 0.75);
     box-shadow: 0px 3px 19px -9px rgba(0, 0, 0, 0.75);
     margin-bottom: 20px; }
   .colorlib-featured .owl-theme .owl-dots .owl-dot span {
@@ -165,11 +173,9 @@ h1, h2, h3, h4, h5, h6, figure {
   .colorlib-work-featured .mobile-wrap .mobile-img {
     background-position: top;
     height: 730px;
-    -webkit-box-shadow: 0px 3px 38px -13px rgba(0, 0, 0, 0.2);
-    -moz-box-shadow: 0px 3px 38px -13px rgba(0, 0, 0, 0.2);
-    box-shadow: 0px 3px 38px -13px rgba(0, 0, 0, 0.2);
+    -webkit-box-shadow: 0px 3px 38px -13px rgba(0, 0, 0, 0.5);
+    box-shadow: 0px 3px 38px -13px rgba(0, 0, 0, 0.5);
     -webkit-border-radius: 4px;
-    -moz-border-radius: 4px;
     -ms-border-radius: 4px;
     border-radius: 4px; }
   .colorlib-work-featured .mobile-wrap .desc {
@@ -195,15 +201,20 @@ h1, h2, h3, h4, h5, h6, figure {
         padding-left: 50px; }
 
 .colorlib-heading {
-  margin-bottom: 5em; }
-  .colorlib-heading h2 {
-    font-size: 50px;
-    font-weight: 300;
-    margin-bottom: 30px;
+  margin-bottom: 3em;
+  margin-top: 3em;  }
+  .colorlib-heading h3 {
+    font-weight: 500;
+	color: whitesmoke;
+    margin-bottom: 5px;
     position: relative; }
     @media screen and (max-width: 768px) {
       .colorlib-heading h2 {
         font-size: 30px; } }
+  .colorlib-heading p {
+	  color: white;
+	  font-weight: 400;
+  }
 
 #colorlib-footer {
   background: #303133;

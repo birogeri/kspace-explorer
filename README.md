@@ -17,6 +17,11 @@ The software has many useful features, such as:
 * Load your own images and analyse artefacts originating from kspace
 * Short explanation for various functions within the software
 
+<div style="background-color:lightblue;text-align:center;border:1px solid red">
+  This app was created in my spare time. <br> If you find it useful please consider
+  <a href="https://www.paypal.me/birogeri/5gbp">buying me a coffee with PayPal</a>
+</div>
+
 ## **Installation**
 
 1. You will need to have the following software and packages
