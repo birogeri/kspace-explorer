@@ -17,10 +17,12 @@ The software has many useful features, such as:
 * Load your own images and analyse artefacts originating from kspace
 * Short explanation for various functions within the software
 
-<div style="background-color:lightblue;text-align:center;border:1px solid red">
-  This app was created in my spare time. <br> If you find it useful please consider
-  <a href="https://www.paypal.me/birogeri/5gbp">buying me a coffee with PayPal</a>
-</div>
+---
+
+☕ **This app was created in my spare time.**
+If you find it useful please consider [buying me a coffee with PayPal](https://www.paypal.me/birogeri/5gbp) ☕
+
+---
 
 ## **Installation**
 
@@ -142,10 +144,19 @@ To get a deeper understanding of the inner workings the code can be inspected. I
 
 ## Disclaimer and limitations
 
-This software is not intended for medical use. 
+This software is not intended for medical use.
 Even if a scanner original DICOM file is used, the resulting k-space is not equivalent
 to the scanner raw data as it contains all post-acquisition modifications
 applied by the scanner software.
+
+## Author & Contributors
+
+| ![Author](https://i.imgur.com/tpRket9.png) |
+|:--:|
+| [Gergely Biró](https://www.linkedin.com/in/gergelybiro) |
+
+
+## References
 
 ```references
     [1] Moratal, D., Vallés-Luch, A., Martí-Bonmati, L., & Brummers, M. E. (2008). k-Space tutorial: An MRI educational tool for a better understanding of k-space. Biomedical Imaging and Intervention Journal, 4(1). http://doi.org/10.2349/biij.4.1.e15
