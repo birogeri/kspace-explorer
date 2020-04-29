@@ -40,7 +40,7 @@ If you find it useful please consider [buying me a coffee with PayPal](https://w
     Install via pip by copying the command below to a command prompt (Windows: `Win+R` and type `cmd` and hit Enter)
 
     ```shell
-        pip3 install numpy pydicom PIL PyQt5
+        pip3 install numpy pydicom Pillow PyQt5
     ```
 
 3. Download the app and extract it
