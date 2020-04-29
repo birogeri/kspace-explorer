@@ -59,7 +59,7 @@ To save you navigating on Windows,
 just open the folder where the app was extracted and: 
 * Click the address bar (the line that looks something 
 like this: *"This PC > Downloads > kspace-explorer-master"*)
-* Delete the folder address and type ```cmd``` and hit Enter
+* Delete the address and type ```cmd``` and hit Enter
 * A window should appear and you can now type ```python3 kspace.py```
 ## **Usage**
 
