@@ -43,7 +43,7 @@ If you find it useful please consider [buying me a coffee with PayPal](https://w
         pip3 install numpy pydicom Pillow PyQt5
     ```
 
-3. Download the app and extract it
+3. [Download the app](https://github.com/birogeri/kspace-explorer/archive/master.zip) and extract it
 
 ## Starting the program
 
@@ -53,6 +53,14 @@ Navigate to the folder that contains and run it by typing the command below
     python3 kspace.py
 ```
 
+**Alternatively (on Windows)**
+
+To save you navigating on Windows, 
+just open the folder where the app was extracted and: 
+* Click the address bar (the line that looks something 
+like this: *"This PC > Downloads > kspace-explorer-master"*)
+* Delete the folder address and type ```cmd``` and hit Enter
+* A window should appear and you can now type ```python3 kspace.py```
 ## **Usage**
 
 KSE automatically loads a default image but you can
