@@ -205,7 +205,7 @@ ApplicationWindow {
                 handle.height: 18
                 handle.width: 8
                 enabled: !play_anim.running
-                onValueChanged: py_MainApp.update_displays(value)
+                onValueChanged: py_MainApp.update_displays()
                 PropertyAnimation {
                     property int len: 10000
                     id: play_anim
@@ -327,8 +327,8 @@ ApplicationWindow {
                             //: Right drawer switch button text
                             objectName: "hamming"
                             Layout.alignment: Qt.AlignLeft
-                            checked: default_value
-                            onCheckedChanged: { py_MainApp.update_displays(checked) }
+                            checked: false
+                            onCheckedChanged: { py_MainApp.update_displays() }
                         }
                     }
 
@@ -336,7 +336,7 @@ ApplicationWindow {
                         anchors.left: parent.left
                         anchors.right: parent.right
                         Slider {
-                            property var desc: qsTr("Reducing the scan time by scanning fewer lines of the k-space in phase direction. The remaining lines are either filled with zeroes or using a property of the k-space called conjugate symmetry. This means that in theory, k-space is quadrants are symmetric i.e. a point in the top left corner equals the one in the bottom right corner (with the opposite sign of the imaginary part of the complex value.)")
+                            property var desc: qsTr("Reducing the scan time by scanning fewer lines of the k-space in phase direction. The remaining lines are either filled with zeroes or using a property of the k-space called conjugate symmetry. This means that in theory, k-space quadrants are symmetric i.e. a point in the top left corner equals the one in the bottom right corner (with the opposite sign of the imaginary part of the complex value.)")
                             property int default_value: 100
                             id: partial_fourier_slider
                             objectName: "partial_fourier_slider"
@@ -345,14 +345,14 @@ ApplicationWindow {
                             from: 0
                             to: 100
                             stepSize: 1
-                            value: default_value
+                            value: 100
                             onHoveredChanged: {
                                 descLabel.text = desc
                                 descriptionPane.shown = !descriptionPane.shown;
                             }
                             onValueChanged: {
                                 value == to ? rdc_slider.enabled = true : rdc_slider.enabled = false
-                                py_MainApp.update_displays(value)
+                                py_MainApp.update_displays()
                             }
                             Label {
                                 leftPadding: 5
@@ -371,14 +371,14 @@ ApplicationWindow {
                             property bool default_value: false
                             id: zero_fill
                             objectName: "zero_fill"
-                            checked: default_value
+                            checked: false
                             text: qsTr("Zero Fill")
-                            onCheckedChanged: py_MainApp.update_displays(checked)
+                            onCheckedChanged: py_MainApp.update_displays()
                         }
                     }
 
                     Slider {
-                        property var desc: qsTr("Image noise is a random granular pattern in the detected signal. It does not add value to the image due to its randomness. Noise can originate from the examined body itself (random thermal motion of atoms) or the electronic equipment used to detect signals. The signal-to-noise ratio is used to describe the relation between the useful signal and the random noise. This slider adds noise to the user image to simulate the result with given signal-to-noise ratio SNR[dB]=20log10(S/N) where S is the mean signal and N is the standard deviation of the noise.")
+                        property var desc: qsTr("Image noise is a random granular pattern in the detected signal. It does not add value to the image due to its randomness. Noise can originate from the examined body itself (random thermal motion of atoms) or the electronic equipment used to detect signals. The signal-to-noise ratio is used to describe the relation between the useful signal and the random noise. This slider adds noise to the image to simulate the new signal-to-noise ratio SNR[dB]=20log10(S/N) where S is the mean signal and N is the standard deviation of the noise.")
                         property int default_value: 30
                         id: noise_slider
                         objectName: "noise_slider"
@@ -387,15 +387,15 @@ ApplicationWindow {
                         height: 48
                         from: -30
                         to: 30
-                        value: default_value
+                        value: 30
                         onHoveredChanged: {
                             descLabel.text = desc
                             descriptionPane.shown = !descriptionPane.shown;
                         }
-                        onValueChanged: py_MainApp.update_displays(value)
+                        onValueChanged: py_MainApp.update_displays()
                         Label {
                             leftPadding: 5
-                            text: qsTr("Signat to Noise (dB)")
+                            text: qsTr("Signal to Noise (dB)")
                         }
                         ToolTip {
                             parent: noise_slider.handle
@@ -414,14 +414,14 @@ ApplicationWindow {
                         height: 48
                         from: 0
                         to: 100
-                        value: default_value
+                        value: 100
                         onHoveredChanged: {
                             descLabel.text = desc
                             descriptionPane.shown = !descriptionPane.shown;
                         }
                         onValueChanged: {
                             value == to ? partial_fourier_slider.enabled = true : partial_fourier_slider.enabled = false
-                            py_MainApp.update_displays(value)
+                            py_MainApp.update_displays()
                         }
                         Label {
                             leftPadding: 5
@@ -446,15 +446,15 @@ ApplicationWindow {
                         from: 0
                         to: 100
                         stepSize: 0.1
-                        value: default_value
+                        value: 0
                         onHoveredChanged: {
                             descLabel.text = desc
                             descriptionPane.shown = !descriptionPane.shown;
                         }
-                        onValueChanged: py_MainApp.update_displays(value)
+                        onValueChanged: py_MainApp.update_displays()
                         Label {
                             leftPadding: 5
-                            text: qsTr("High pass filter")
+                            text: qsTr("High Pass Filter")
                         }
                         ToolTip {
                             parent: high_pass_slider.handle
@@ -474,17 +474,17 @@ ApplicationWindow {
                         from: 0
                         to: 100
                         stepSize: 0.1
-                        value: default_value
+                        value: 100
                         onHoveredChanged: {
                             descLabel.text = desc
                             descriptionPane.shown = !descriptionPane.shown;
                         }
 
-                        onValueChanged: py_MainApp.update_displays(value)
+                        onValueChanged: py_MainApp.update_displays()
                         Label {
                             leftPadding: 5
                             anchors.left: parent.left
-                            text: qsTr("Low pass filter")
+                            text: qsTr("Low Pass Filter")
                         }
                         ToolTip {
                             parent: low_pass_slider.handle
@@ -498,7 +498,7 @@ ApplicationWindow {
                         anchors.right: parent.right
                         Slider {
                             property int default_value: 1
-                            property var desc: qsTr("Simulates acquiring every nth (where n is the acceleration factor) line of kspace, starting from the midline. Commonly used in the SENSE algorithm.")
+                            property var desc: qsTr("Simulates acquiring every nth (where n is the acceleration factor) line of k-space, starting from the midline. Commonly used in the SENSE algorithm.")
                             id: undersample_kspace
                             objectName: "undersample_kspace"
                             Layout.fillWidth: true
@@ -506,12 +506,12 @@ ApplicationWindow {
                             from: 1
                             to: 16
                             stepSize: 1
-                            value: default_value
+                            value: 1
                             onHoveredChanged: {
                                 descLabel.text = desc
                                 descriptionPane.shown = !descriptionPane.shown;
                             }
-                            onValueChanged: py_MainApp.update_displays(value)
+                            onValueChanged: py_MainApp.update_displays()
                             Label {
                                 leftPadding: 5
                                 anchors.left: parent.left
@@ -527,15 +527,15 @@ ApplicationWindow {
                             property bool default_value: false
                             id: compress
                             objectName: "compress"
-                            checked: default_value
+                            checked: false
                             text: qsTr("Compress")
-                            onCheckedChanged: py_MainApp.update_displays(checked)
+                            onCheckedChanged: py_MainApp.update_displays()
                         }
                     }
 
                     Slider {
                         property int default_value: 0
-                        property var desc: qsTr("Decreases the amplitude of the highest peak in kspace (DC signal)")
+                        property var desc: qsTr("Decreases the amplitude of the highest peak in k-space (DC signal)")
                         id: decrease_dc
                         objectName: "decrease_dc"
                         anchors.left: parent.left
@@ -544,12 +544,12 @@ ApplicationWindow {
                         from: 0
                         to: 100
                         stepSize: 1
-                        value: default_value
+                        value: 0
                         onHoveredChanged: {
                             descLabel.text = desc
                             descriptionPane.shown = !descriptionPane.shown;
                         }
-                        onValueChanged: py_MainApp.update_displays(value)
+                        onValueChanged: py_MainApp.update_displays()
                         Label {
                             leftPadding: 5
                             anchors.left: parent.left
@@ -623,8 +623,8 @@ ApplicationWindow {
                         from: -10
                         to: 10
                         stepSize: 1
-                        value: default_value
-                        onValueChanged: py_MainApp.update_displays(value)
+                        value: -3
+                        onValueChanged: py_MainApp.update_displays()
                         Label {
                             leftPadding: 5
                             anchors.left: parent.left
@@ -976,6 +976,20 @@ ApplicationWindow {
                         wrapMode: Text.WordWrap
                         clip: true
                         text: "K-space Explorer is a free and open-source educational tool primarily for students and MRI radiographers"
+                    }
+                    Text {
+                        Layout.fillWidth: true
+                        wrapMode: Text.WordWrap
+                        clip: true
+                        text: 'Homepage: <a href="http://k-space.app">k-space.app</a>'
+                        onLinkActivated: Qt.openUrlExternally(link)
+                    }
+                    Text {
+                        Layout.fillWidth: true
+                        wrapMode: Text.WordWrap
+                        clip: true
+                        text: 'Author & contributors: <a href="https://github.com/birogeri/kspace-explorer#author--contributors">View on GitHub</a>'
+                        onLinkActivated: Qt.openUrlExternally(link)
                     }
                     Frame {
                         Layout.fillWidth: true
