@@ -87,6 +87,7 @@ class ImageManipulators:
         self.noise_map = np.zeros_like(self.kspace_abs)
         self.signal_to_noise = 30
         self.spikes = []
+        self.patches = []
 
         self.np_fft(self.img)
         self.prepare_displays()
@@ -409,6 +410,21 @@ class ImageManipulators:
             kspace[spike] = spike_intensity
 
     @staticmethod
+    def apply_patches(kspace, patches: list):
+        """Applies patches to kspace
+
+         Applies patches (zero value squares) to the kspace data at the
+         specified coordinates and size.
+
+         Parameters:
+             kspace (np.ndarray): Complex kspace ndarray
+             patches (list): coordinates for the spikes (row, column, radius)
+         """
+        for patch in patches:
+            x, y, size = patch[0], patch[1], patch[2]
+            kspace[max(x-size, 0):x+size+1, max(y-size, 0):y+size+1] = 0
+
+    @staticmethod
     def filling(kspace: np.ndarray, value: float, mode: int):
         """Receives kspace filling UI changes and redirects to filling methods
 
@@ -590,10 +606,41 @@ class MainApp(QObject):
         """
         im.spikes.append((int(mouse_y), int(mouse_x)))
 
+    @pyqtSlot(QVariant, QVariant, QVariant, name="add_patch")
+    def add_patch(self, mouse_x, mouse_y, radius):
+        """Inserts a patch at a location given by the UI.
+
+        Values are saved in reverse order because NumPy's indexing conventions:
+        array[row (== y), column (== x)]
+
+        Parameters:
+            mouse_x: click position on the x-axis
+            mouse_y: click position on the y-axis
+            radius: size of the patch
+        """
+        im.patches.append((int(mouse_y), int(mouse_x), radius))
+
     @pyqtSlot(name="delete_spikes")
     def delete_spikes(self):
         """Deletes manually added kspace spikes"""
         im.spikes = []
+
+    @pyqtSlot(name="delete_patches")
+    def delete_patches(self):
+        """Deletes manually added kspace patches"""
+        im.patches = []
+
+    @pyqtSlot(name="undo_patch")
+    def undo_patch(self):
+        """Deletes the last patch"""
+        if im.patches:
+            del im.patches[-1]
+
+    @pyqtSlot(name="undo_spike")
+    def undo_spike(self):
+        """Deletes the last spike"""
+        if im.spikes:
+            del im.spikes[-1]
 
     @pyqtSlot(name="update_displays")
     def update_displays(self):
@@ -626,41 +673,44 @@ class MainApp(QObject):
         # 02 - Spikes
         im.apply_spikes(im.kspacedata, im.spikes)
 
-        # 03 - Reduced scan percentage
+        # 03 - Patches
+        im.apply_patches(im.kspacedata, im.patches)
+
+        # 04 - Reduced scan percentage
         if self.ui_rdc_slider.property("enabled"):
             v_ = self.ui_rdc_slider.property("value")
             im.reduced_scan_percentage(im.kspacedata, v_)
 
-        # 04 - Partial fourier
+        # 05 - Partial fourier
         if self.ui_partial_fourier_slider.property("enabled"):
             v_ = self.ui_partial_fourier_slider.property("value")
             zf = self.ui_zero_fill.property("checked")
             im.partial_fourier(im.kspacedata, v_, zf)
 
-        # 05 - High pass filter
+        # 06 - High pass filter
         v_ = self.ui_high_pass_slider.property("value")
         im.high_pass_filter(im.kspacedata, v_)
 
-        # 06 - Low pass filter
+        # 07 - Low pass filter
         v_ = self.ui_low_pass_slider.property("value")
         im.low_pass_filter(im.kspacedata, v_)
 
-        # 07 - Undersample k-space
+        # 08 - Undersample k-space
         v_ = self.ui_undersample_kspace.property("value")
         if int(v_):
             compress = self.ui_compress.property("checked")
             im.undersample(im.kspacedata, int(v_), compress)
 
-        # 08 - DC signal decrease
+        # 09 - DC signal decrease
         v_ = self.ui_decrease_dc.property("value")
         if int(v_) > 1:
             im.decrease_dc(im.kspacedata, int(v_))
 
-        # 09 - Hamming filter
+        # 10 - Hamming filter
         if self.ui_hamming.property("checked"):
             im.hamming(im.kspacedata)
 
-        # 10 - Acquisition simulation progress
+        # 11 - Acquisition simulation progress
         if self.ui_filling.property("value") < 100:
             mode = self.ui_filling_mode.property("currentIndex")
             im.filling(im.kspacedata, self.ui_filling.property("value"), mode)
@@ -761,7 +811,7 @@ if __name__ == "__main__":
     im = ImageManipulators(default_image)
 
     # Loading GUI file
-    # engine.load('ui.qml')
+    # engine.load('ui_source/ui.qml')
 
     engine.load(QUrl('qrc:/ui.qml'))
 
