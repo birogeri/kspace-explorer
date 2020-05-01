@@ -263,9 +263,11 @@ ApplicationWindow {
                 highlighted: false
                 implicitHeight: 35
                 Layout.rightMargin: 20
+                Layout.alignment: Qt.AlignRight
                 icon.source: "images/undo-variant.png"
                 onPressed: {
                     py_MainApp.delete_spikes()
+                    py_MainApp.delete_patches()
                     partial_fourier_slider.value = partial_fourier_slider.default_value
                     zero_fill.checked = zero_fill.default_value
                     noise_slider.value = noise_slider.default_value
@@ -378,7 +380,7 @@ ApplicationWindow {
                     }
 
                     Slider {
-                        property var desc: qsTr("Image noise is a random granular pattern in the detected signal. It does not add value to the image due to its randomness. Noise can originate from the examined body itself (random thermal motion of atoms) or the electronic equipment used to detect signals. The signal-to-noise ratio is used to describe the relation between the useful signal and the random noise. This slider adds noise to the image to simulate the new signal-to-noise ratio SNR[dB]=20log10(S/N) where S is the mean signal and N is the standard deviation of the noise.")
+                        property var desc: qsTr("Image noise is a random granular pattern in the detected signal. It does not add value to the image due to its randomness. Noise can originate from the examined body itself (random thermal motion of atoms) or the electronic equipment used to detect signals. The signal-to-noise ratio is used to describe the relation between the useful signal and the random noise. This slider adds noise to the image to simulate the new signal-to-noise ratio SNR[dB]=20log₁₀(𝑆/𝑁) where 𝑆 is the mean signal and 𝑁 is the standard deviation of the noise.")
                         property int default_value: 30
                         id: noise_slider
                         objectName: "noise_slider"
@@ -498,7 +500,7 @@ ApplicationWindow {
                         anchors.right: parent.right
                         Slider {
                             property int default_value: 1
-                            property var desc: qsTr("Simulates acquiring every nth (where n is the acceleration factor) line of k-space, starting from the midline. Commonly used in the SENSE algorithm.")
+                            property var desc: qsTr("Simulates acquiring every 𝑛th (where 𝑛 is the acceleration factor) line of k-space, starting from the midline. Commonly used in the SENSE algorithm.")
                             id: undersample_kspace
                             objectName: "undersample_kspace"
                             Layout.fillWidth: true
@@ -529,7 +531,14 @@ ApplicationWindow {
                             objectName: "compress"
                             checked: false
                             text: qsTr("Compress")
-                            onCheckedChanged: py_MainApp.update_displays()
+                            onCheckedChanged: {
+                                py_MainApp.update_displays();
+                                if (checked) {
+                                    pane.state = "compress_mode";
+                                } else {
+                                    pane.state = "normal_mode";
+                                }
+                            }
                         }
                     }
 
@@ -562,36 +571,69 @@ ApplicationWindow {
                         }
                     }
 
-                    RowLayout {
+                    GridLayout {
                         anchors.left: parent.left
                         anchors.right: parent.right
+                        columns: 3
                         Button {
                             id: btnSpike
                             text: qsTr("Add spike")
                             icon.source: "images/plus-thick.png"
                             Layout.alignment: Qt.AlignHCenter
-                            function spikemode(){
-                                enabled = false
-                                kspace_mouse.cursorShape = Qt.CrossCursor
-                            }
-
-                            function normalmode(){
-                                enabled = true
-                                kspace_mouse.cursorShape = Qt.ArrowCursor
-                            }
-
+                            Layout.fillWidth: true
                             onPressed: {
-                                spikemode();
+                                pane.state = "spike_mode";
                                 drawer2.modal && drawer2.close();
                                 }
                         }
 
                         Button {
-                            text: qsTr("Clear spikes")
+                            text: qsTr("Clear")
                             Layout.alignment: Qt.AlignHCenter
+                            Layout.fillWidth: true
                             icon.source: "images/trash-can.png"
                             onPressed: {
                                 py_MainApp.delete_spikes()
+                                py_MainApp.update_displays()
+                                }
+                        }
+                        Button {
+                            Layout.alignment: Qt.AlignHCenter
+                            icon.source: "images/undo-variant.png"
+                            onPressed: {
+                                py_MainApp.undo_spike()
+                                py_MainApp.update_displays()
+                            }
+                        }
+
+                        Button {
+                            id: btnPatch
+                            text: qsTr("Add patch")
+                            icon.source: "images/eraser.png"
+                            Layout.alignment: Qt.AlignHCenter
+                            Layout.fillWidth: true
+                            onPressed: {
+                                pane.state = "patch_mode";
+                                drawer2.modal && drawer2.close();
+                                }
+                        }
+
+                        Button {
+                            id: btnClearPatches
+                            text: qsTr("Clear")
+                            Layout.alignment: Qt.AlignHCenter
+                            Layout.fillWidth: true
+                            icon.source: "images/trash-can.png"
+                            onPressed: {
+                                py_MainApp.delete_patches()
+                                py_MainApp.update_displays()
+                                }
+                        }
+                        Button {
+                            Layout.alignment: Qt.AlignHCenter
+                            icon.source: "images/undo-variant.png"
+                            onPressed: {
+                                py_MainApp.undo_patch()
                                 py_MainApp.update_displays()
                                 }
                         }
@@ -628,7 +670,7 @@ ApplicationWindow {
                         Label {
                             leftPadding: 5
                             anchors.left: parent.left
-                            text: qsTr("Kspace scaling constant (10^x)")
+                            text: qsTr("K-space scaling constant (10ⁿ)")
                         }
                         ToolTip {
                             parent: ksp_const.handle
@@ -678,6 +720,32 @@ ApplicationWindow {
             id: pane
             anchors.fill: parent
             Material.background: "#333333"
+            states: [
+                State {
+                    name: "spike_mode"
+                    PropertyChanges { target: btnSpike; enabled: false }
+                    PropertyChanges { target: btnPatch; enabled: false }
+                    PropertyChanges { target: kspace_mouse; cursorShape: Qt.CrossCursor }
+                },
+                State {
+                    name: "patch_mode"
+                    PropertyChanges { target: btnSpike; enabled: false }
+                    PropertyChanges { target: btnPatch; enabled: false }
+                    PropertyChanges { target: kspace_mouse; cursorShape: Qt.CrossCursor }
+                },
+                State {
+                    name: "compress_mode"
+                    PropertyChanges { target: btnSpike; enabled: false }
+                    PropertyChanges { target: btnPatch; enabled: false }
+                    PropertyChanges { target: kspace_mouse; cursorShape: Qt.ArrowCursor }
+                },
+                State {
+                    name: "normal_mode"
+                    PropertyChanges { target: btnSpike; enabled: true }
+                    PropertyChanges { target: btnPatch; enabled: true }
+                    PropertyChanges { target: kspace_mouse; cursorShape: Qt.ArrowCursor }
+                }
+            ]
 
             BusyIndicator {
                 running: dialog_loader.status === Loader.Loading
@@ -818,18 +886,23 @@ ApplicationWindow {
                             kspace_gamma.gamma = 1
                             image_item.visible = !image_item.visible
                         }
-                        onClicked:
-                        if (btnSpike.enabled == false && mouse.button === Qt.LeftButton) {
-                            var wd_ratio = kspace.paintedWidth/kspace.sourceSize.width
-                            var ht_ratio = kspace.paintedHeight/kspace.sourceSize.height
-                            py_MainApp.add_spike((mouseX-1)/wd_ratio, (mouseY-1)/ht_ratio)
-                            py_MainApp.update_displays()
-                            btnSpike.normalmode()
-                            drawer2.modal && drawer2.open()
-                        } else if (btnSpike.enabled == false && mouse.button === Qt.RightButton) {
-                            btnSpike.enabled = true
-                            btnSpike.normalmode()
-                            drawer2.modal && drawer2.open()
+                        onClicked: {
+                            if ((pane.state != "normal_mode" && pane.state != "compress_mode") && mouse.button === Qt.LeftButton) {
+                                var wd_ratio = kspace.paintedWidth/kspace.sourceSize.width;
+                                var ht_ratio = kspace.paintedHeight/kspace.sourceSize.height;
+                                if (pane.state == "spike_mode") {
+                                    py_MainApp.add_spike((mouseX-1)/wd_ratio, (mouseY-1)/ht_ratio)
+                                }
+                                else if (pane.state == "patch_mode") {
+                                    py_MainApp.add_patch((mouseX-1)/wd_ratio, (mouseY-1)/ht_ratio, 2)
+                                }
+                                py_MainApp.update_displays()
+                                pane.state = "normal_mode"
+                                drawer2.modal && drawer2.open()
+                            } else if (pane.state != "normal_mode" && mouse.button === Qt.RightButton) {
+                                pane.state = "normal_mode"
+                                drawer2.modal && drawer2.open()
+                                }
                             }
                     }
 
