@@ -13,8 +13,8 @@ the hood.
 The software has many useful features, such as:
 
 * A modern responsive user interface using Qt
-* Real-time Fourier transform to instantaneously visualise changes
-* Load your own images and analyse artefacts originating from kspace
+* Automatic Fourier transform to instantaneously visualise changes
+* Load your own images and analyse artefacts originating from k-space
 * Short explanation for various functions within the software
 
 ---
@@ -37,7 +37,7 @@ If you find it useful please consider [buying me a coffee with PayPal](https://w
     * **NumPy**     - handles FFT transforms and array operations
     * **pydicom**   - DICOM format medical image reader
 
-    Install via pip by copying the command below to a command prompt (Windows: `Win+R` and type `cmd` and hit Enter)
+    Install via pip by copying the command below to a command prompt (Windows: `Win+R` and type `cmd` and press Enter)
 
     ```shell
         pip3 install numpy pydicom Pillow PyQt5
@@ -47,7 +47,7 @@ If you find it useful please consider [buying me a coffee with PayPal](https://w
 
 ## Starting the program
 
-Navigate to the folder that contains and run it by typing the command below
+Navigate to the folder that contains the extracted software and run it by typing the command below
 
 ``` shell
     python kspace.py
@@ -59,8 +59,8 @@ To save you navigating on Windows,
 just open the folder where the app was extracted and: 
 * Click the address bar (the line that looks something 
 like this: *"This PC > Downloads > kspace-explorer-master"*)
-* Delete the address and type ```cmd``` and hit Enter
-* A window should appear and you can now type ```python kspace.py```
+* Delete the address and type ```cmd``` and press Enter
+* A window should appear, and you can now type ```python kspace.py```
 ## **Usage**
 
 KSE automatically loads a default image but you can
@@ -72,19 +72,19 @@ easily switch images by either:
 
 ### Accessing the k-space modifiers
 
-There are various modifiers available to modify the k-space to see their effects on the resulting image. These are accessible from the drawer panel on the right. To access it:
+There are various modifiers available to edit the k-space and see the effects on the resulting image. These are accessible from the drawer panel on the right. To access it:
 
 * Click and Drag inwards from the right side of the window
-* Hit the `Tab` key
+* Press the `Tab` key
 * Click the round button ![Drawer open icon](docs/tune-vertical.png) on the lower right side
 
 ### Simulating image acquisition
 
 You can use the controls in the footer. The footer can be toggled by using the toolbar icon ![Footer toggle icon](docs/layout-footer.png) or by hitting `F7`
 
-* To start or continue the acquisition, press Play/Pause ![Play/Pause icon](docs/play-pause.png) or hit `F5`
-* To rewind press Rewind ![Rewind icon](docs/skip-backward.png) or hit ``F4``
-* You can change the simulation mode with the combobox on right-hand side
+* To start or continue the acquisition, press Play/Pause ![Play/Pause icon](docs/play-pause.png) or press `F5`
+* To rewind press Rewind ![Rewind icon](docs/skip-backward.png) or press ``F4``
+* You can change the simulation mode with the dropdown box on right-hand side
 
 ### Saving images
 
@@ -93,7 +93,7 @@ Your modified images can be saved to your computer by either
 * Pressing `Ctrl+S`
 * Clicking Save ![Play/Pause icon](docs/save.png) on the toolbar
 
-Then select the location and the filename. Visual representation of the k-space and the corresponding image will be saved with *_k* and *_i* suffixes respectively.
+Then select the location and the filename. Visual representation of the k-space and the corresponding image will be saved with *_k* and *_i* suffixes, respectively.
 
 *Please note that if you select the tiff format, k-space image will be saved with 32-bit depth. This not handled well with many image viewers.*
 
@@ -101,17 +101,17 @@ Then select the location and the filename. Visual representation of the k-space 
 
 To enhance certain parts of the image for viewing it is often useful to change the **brightness** or **contrast** of the displays.
 
-* Hold the right mouse button and move up/down to change image or k-space brighness
+* Hold the right mouse button and move up/down to change image or k-space brightness
 * Hold the right mouse button and move left/right to change image contrast
 
 With **windowing** it is possible to limit the displayed image pixel intensity range.
 
 * Drag mouse left/right with middle mouse button pressed to change window width
-* Drag mouse up/down with middle mouse button pressed to change window center
+* Drag mouse up/down with middle mouse button pressed to change window centre
 
 ## **Comparison to Other Similar Projects**
 
-This app was directly influenced by the article of D. Moratal et al. [1], however my aim was to go beyond the functionality that it offers. There are several other similar software for different computing environments. Here is a non exhaustive list of them:
+This app was directly influenced by the article of D. Moratal et al. [1], however my aim was to go beyond the functionality that it offers. Several similar software is available for different computing environments. Here is a non-exhaustive list of them:
 
 * [k-Space Tutorial](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3097694/) (PC, Matlab) [1]
 * [Journey through k-space](http://ww3.comsats.edu.pk/miprg/Downloads.aspx) (PC, Matlab) [2]
@@ -139,16 +139,19 @@ The aim of K-space Explorer is to provide a smooth, modern UI with familiar tool
 
 To get a deeper understanding of the inner workings the code can be inspected. In-line documentation can help understanding the mathematical principles behind various interactions.
 
+## Latest changes
+
+* Added k-space *Patch tool* to eliminate spikes
+
 ## Known bugs
 
 * RGB DICOMs are not supported
 
 ## Planned features
 
-* Heal Tool - remove spikes from kspace
 * Accelerated scanning method simulation (SENSE, GRAPPA, POCS)
 * Multiple languages
-* CLAHE enhanchement
+* CLAHE enhancement
 
 ## Disclaimer and limitations
 
