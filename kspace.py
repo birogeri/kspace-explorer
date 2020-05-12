@@ -516,7 +516,7 @@ class MainApp(QObject):
         ctrls = ["image_display", "kspace_display", "noise_slider", "compress",
                  "decrease_dc", "partial_fourier_slider", "undersample_kspace",
                  "high_pass_slider", "low_pass_slider", "ksp_const", "filling",
-                 "hamming", "rdc_slider", "zero_fill", "compress", "hd_button",
+                 "hamming", "rdc_slider", "zero_fill", "compress", "droparea",
                  "filling_mode"]
 
         # Binding UI elements and controls
@@ -541,6 +541,8 @@ class MainApp(QObject):
         except (FileNotFoundError, Exception):
             # When the image is inaccessible at load time
             del self.url_list[self.current_img]
+        self.ui_droparea.setProperty("loaded_imgs", len(self.url_list))
+        self.ui_droparea.setProperty("curr_img", self.current_img+1)
 
     @pyqtSlot(str, name="load_new_img")
     def load_new_img(self, urls: str):
@@ -556,6 +558,8 @@ class MainApp(QObject):
         self.current_img = 0
         self.url_list = urls.split(",")
         self.url_list[:] = [s.replace('file:///', '') for s in self.url_list]
+        self.ui_droparea.setProperty("loaded_imgs", len(self.url_list))
+        self.ui_droparea.setProperty("curr_img", self.current_img + 1)
         self.execute_load()
 
     @pyqtSlot(bool, name="wheel_img")
@@ -812,7 +816,6 @@ if __name__ == "__main__":
 
     # Loading GUI file
     # engine.load('ui_source/ui.qml')
-
     engine.load(QUrl('qrc:/ui.qml'))
 
     win = engine.rootObjects()[0]

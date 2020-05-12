@@ -754,11 +754,15 @@ ApplicationWindow {
             }
 
             DropArea {
+                property int loaded_imgs: 1
+                property int curr_img: 1
                 id: dropArea
+                objectName: "droparea"
                 anchors.fill: parent
                 enabled: true
-                onDropped:
-                    py_MainApp.load_new_img(drop.urls)
+                onDropped: {
+                    py_MainApp.load_new_img(drop.urls);
+                }
             }
 
             GridLayout {
@@ -796,8 +800,8 @@ ApplicationWindow {
                         fillMode: Image.PreserveAspectFit
                         anchors.fill: parent
                         visible: false
-                        property var ww: 1
-                        property var wc: 0.5
+                        property real ww: 1
+                        property real wc: 0.5
                     }
 
                     MouseArea {
@@ -851,6 +855,21 @@ ApplicationWindow {
                         samples: 17
                         color: "#80000000"
                         source: image
+                    }
+
+                    Label {
+                        id: im_no
+                        z: 1
+                        color: "lightgray"
+                        text: dropArea.curr_img + " / " + dropArea.loaded_imgs
+                        visible: (dropArea.loaded_imgs-1)
+                        padding: 7
+                        background: Rectangle {
+                            color: "black"
+                            radius: 10
+                            anchors.fill: parent
+                            opacity: 0.5
+                        }
                     }
                 }
 

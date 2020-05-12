@@ -1,4 +1,4 @@
 PyQt5>=5.14.2
-numpy>=1.14.3+mkl
+numpy>=1.14.3
 pydicom>=1.0.2
 Pillow>=5.1.0
