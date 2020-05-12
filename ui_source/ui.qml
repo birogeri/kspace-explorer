@@ -1,7 +1,7 @@
-import QtQuick 2.12
+import QtQuick 2.13
 import QtQuick.Layouts 1.3
-import QtQuick.Controls 2.4
-import QtQuick.Controls.Material 2.12
+import QtQuick.Controls 2.13
+import QtQuick.Controls.Material 2.13
 import QtGraphicalEffects 1.0
 import QtQuick.Dialogs 1.1
 
@@ -23,7 +23,7 @@ ApplicationWindow {
 
     Shortcut {
         sequence: "Tab"
-        onActivated: drawer2.open()
+        onActivated: drawer_right.open()
     }
 
     header: ToolBar {
@@ -34,7 +34,7 @@ ApplicationWindow {
         RowLayout {
             spacing: 0
             anchors.fill: parent
-            anchors.rightMargin: !drawer2.modal ? drawer2.width : undefined
+            anchors.rightMargin: !drawer_right.modal ? drawer_right.width : undefined
 
             ToolButton {
                 id: open_img
@@ -151,7 +151,7 @@ ApplicationWindow {
         Material.foreground: "white"
         Material.background: "#555555"
         RowLayout {
-            anchors.rightMargin: !drawer2.modal ? drawer2.width : undefined
+            anchors.rightMargin: !drawer_right.modal ? drawer_right.width : undefined
             anchors.fill: parent
 
             ToolButton {
@@ -233,7 +233,7 @@ ApplicationWindow {
     }
 
     Drawer {
-        id: drawer2
+        id: drawer_right
         width: narrowWindow ? window.width : 400
         height: window.height
         edge: Qt.RightEdge
@@ -248,7 +248,7 @@ ApplicationWindow {
 
             Switch {
                 id: pin
-                onCheckedChanged: pin.checked ? gridLayout.state= "drawer_pinned" : gridLayout.state= "drawer_unpinned"
+                onCheckedChanged: pin.checked ? split_view.state= "drawer_pinned" : split_view.state= "drawer_unpinned"
                 text: "Pin sidebar"
                 //: Right drawer switch button text
                 Layout.fillWidth: true
@@ -534,9 +534,9 @@ ApplicationWindow {
                             onCheckedChanged: {
                                 py_MainApp.update_displays();
                                 if (checked) {
-                                    pane.state = "compress_mode";
+                                    main_pane.state = "compress_mode";
                                 } else {
-                                    pane.state = "normal_mode";
+                                    main_pane.state = "normal_mode";
                                 }
                             }
                         }
@@ -582,8 +582,8 @@ ApplicationWindow {
                             Layout.alignment: Qt.AlignHCenter
                             Layout.fillWidth: true
                             onPressed: {
-                                pane.state = "spike_mode";
-                                drawer2.modal && drawer2.close();
+                                main_pane.state = "spike_mode";
+                                drawer_right.modal && drawer_right.close();
                                 }
                         }
 
@@ -613,8 +613,8 @@ ApplicationWindow {
                             Layout.alignment: Qt.AlignHCenter
                             Layout.fillWidth: true
                             onPressed: {
-                                pane.state = "patch_mode";
-                                drawer2.modal && drawer2.close();
+                                main_pane.state = "patch_mode";
+                                drawer_right.modal && drawer_right.close();
                                 }
                         }
 
@@ -679,6 +679,13 @@ ApplicationWindow {
                         }
                     }
 
+                    Button {
+                        text: qsTr("SENSE/ASSET simulation")
+                        onClicked: {
+                            thumbnails.state !== "open" ? thumbnails.state = "open" : thumbnails.state = ""
+                        }
+                    }
+
                     Pane {
                         id: descriptionPane
                         parent: flickable_controls
@@ -716,9 +723,56 @@ ApplicationWindow {
         }
     }
 
-    Pane {
-            id: pane
-            anchors.fill: parent
+    SplitView {
+        id: split_view
+        anchors.fill: parent
+        orientation: Qt.Vertical
+        Pane {
+            id: thumbnails
+            Material.background: "#666666"
+            visible: true
+            SplitView.minimumHeight: 0
+            SplitView.preferredHeight: 0
+            padding: 5
+            ListView {
+                id: thumbnails_containter
+                model: 12
+                anchors.fill: parent
+                orientation: Qt.Horizontal
+                spacing: 5
+                snapMode: ListView.SnapPosition
+                delegate: Rectangle {
+                    property int itemIndex: index
+                    // property string itemName: name
+                    height: thumbnails_containter.height - 10
+                    width: childrenRect.width
+                    color: "transparent"
+                    Image {
+                        fillMode: Image.PreserveAspectFit
+                        source: "image://imgs/image"
+                        height: parent.height
+                        smooth: false
+                    }
+                }
+                ScrollIndicator.horizontal: ScrollIndicator { }
+            }
+
+            states: [
+                State {
+                    name: "open"
+                    PropertyChanges {
+                        target: thumbnails
+                        SplitView.preferredHeight: 100
+                    }
+                }
+            ]
+            transitions: Transition {
+                    PropertyAnimation { properties: "SplitView.preferredHeight"; duration: 500}
+                }
+         }
+
+        Pane {
+            id: main_pane
             Material.background: "#333333"
             states: [
                 State {
@@ -771,19 +825,6 @@ ApplicationWindow {
                 rowSpacing: 10
                 columnSpacing: 10
                 flow:  width > height ? GridLayout.LeftToRight : GridLayout.TopToBottom
-
-                states: State {
-                    name: "drawer_pinned"
-                    PropertyChanges { target: gridLayout; anchors.rightMargin : drawer2.width }
-                }
-                State {
-                    name: "drawer_unpinned"
-                    PropertyChanges { target: gridLayout; anchors.rightMargin : undefined }
-                }
-
-                transitions: Transition {
-                     PropertyAnimation { properties: "anchors.rightMargin"; easing.type: Easing.InOutQuad }
-                }
 
                 Item {
                     id: image_item
@@ -906,21 +947,21 @@ ApplicationWindow {
                             image_item.visible = !image_item.visible
                         }
                         onClicked: {
-                            if ((pane.state != "normal_mode" && pane.state != "compress_mode") && mouse.button === Qt.LeftButton) {
+                            if ((main_pane.state != "normal_mode" && main_pane.state != "compress_mode") && mouse.button === Qt.LeftButton) {
                                 var wd_ratio = kspace.paintedWidth/kspace.sourceSize.width;
                                 var ht_ratio = kspace.paintedHeight/kspace.sourceSize.height;
-                                if (pane.state == "spike_mode") {
+                                if (main_pane.state == "spike_mode") {
                                     py_MainApp.add_spike((mouseX-1)/wd_ratio, (mouseY-1)/ht_ratio)
                                 }
-                                else if (pane.state == "patch_mode") {
+                                else if (main_pane.state == "patch_mode") {
                                     py_MainApp.add_patch((mouseX-1)/wd_ratio, (mouseY-1)/ht_ratio, 2)
                                 }
                                 py_MainApp.update_displays()
-                                pane.state = "normal_mode"
-                                drawer2.modal && drawer2.open()
-                            } else if (pane.state != "normal_mode" && mouse.button === Qt.RightButton) {
-                                pane.state = "normal_mode"
-                                drawer2.modal && drawer2.open()
+                                main_pane.state = "normal_mode"
+                                drawer_right.modal && drawer_right.open()
+                            } else if (main_pane.state != "normal_mode" && mouse.button === Qt.RightButton) {
+                                main_pane.state = "normal_mode"
+                                drawer_right.modal && drawer_right.open()
                                 }
                             }
                     }
@@ -950,7 +991,7 @@ ApplicationWindow {
                 radius: 50
                 anchors.bottom: parent.bottom
                 anchors.right: parent.right
-                onClicked: drawer2.open()
+                onClicked: drawer_right.open()
                 icon.source: "images/tune-vertical.png"
             }
 
@@ -964,6 +1005,20 @@ ApplicationWindow {
                 source: button1
             }
         }
+
+        states: State {
+            name: "drawer_pinned"
+            PropertyChanges { target: split_view; anchors.rightMargin : drawer_right.width }
+        }
+        State {
+            name: "drawer_unpinned"
+            PropertyChanges { target: split_view; anchors.rightMargin : undefined }
+        }
+
+        transitions: Transition {
+             PropertyAnimation { properties: "anchors.rightMargin"; easing.type: Easing.InOutQuad }
+        }
+    }
 
     Loader {
         id: dialog_loader
