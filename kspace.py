@@ -1,4 +1,5 @@
 import sys
+import pathlib
 from uuid import uuid4
 
 import numpy as np
@@ -40,15 +41,18 @@ def open_img(path: str, array_dtype: np.dtype = np.float32) -> np.ndarray:
     """
 
     try:
-        img_file = Image.open(path).convert('F')
-        return np.array(img_file).astype(array_dtype)
+        with Image.open(path) as f:
+            img_file = f.convert('F')  # 'F' mode: 32-bit floating point pixels
+            img_pixel_array = np.array(img_file).astype(array_dtype)
+        return img_pixel_array
     except FileNotFoundError:
         raise
     except OSError:
         try:
-            img_file = pydicom.dcmread(path).pixel_array.astype(array_dtype)
-            img_file.setflags(write=True)
-            return img_file
+            with pydicom.dcmread(path) as dcm_file:
+                img_pixel_array = dcm_file.pixel_array.astype(array_dtype)
+            img_pixel_array.setflags(write=True)
+            return img_pixel_array
         except Exception:
             raise
 
@@ -805,6 +809,8 @@ if __name__ == "__main__":
     import qrc
 
     default_image = 'images/default.dcm'
+    app_path = pathlib.Path(__file__).parent.absolute()
+    default_image = str(app_path.joinpath(default_image))
 
     # Main application start
     app = QApplication([])
