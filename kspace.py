@@ -89,10 +89,15 @@ class ImageManipulators:
         self.spikes = []
         self.patches = []
 
-        self.np_fft(self.img)
+        self.np_fft(self.img, self.kspacedata)
+
+        self.orig_kspacedata[:] = self.kspacedata  # Store data write-protected
+        self.orig_kspacedata.setflags(write=False)
+
         self.prepare_displays()
 
-    def np_ifft(self, kspace: np.ndarray):
+    @staticmethod
+    def np_ifft(kspace: np.ndarray, out: np.ndarray):
         """Performs inverse FFT function (kspace to [magnitude] image)
 
         Performs iFFT on the input data and updates the display variables for
@@ -100,23 +105,67 @@ class ImageManipulators:
 
         Parameters:
             kspace (np.ndarray): Complex kspace ndarray
+            out (np.ndarray): Array to store values
         """
-        np.absolute(fftshift(ifft2(ifftshift(kspace))), out=self.img)
+        np.absolute(ifftshift(ifft2(ifftshift(kspace))), out=out)
 
-    def np_fft(self, img: np.ndarray = None):
+    @staticmethod
+    def np_fft(img: np.ndarray, out: np.ndarray):
         """ Performs FFT function (image to kspace)
 
         Performs FFT function, FFT shift and stores the unmodified kspace data
         in a variable and also saves one copy for display and edit purposes.
 
         Parameters:
-            img (np.ndarray):  The NumPy ndarray to be transformed
+            img (np.ndarray): The NumPy ndarray to be transformed
+            out (np.ndarray): Array to store output (must be same shape as img)
         """
-        shiftedfft = fftshift(fft2(fftshift(img)))
+        out[:] = fftshift(fft2(fftshift(img)))
 
-        self.orig_kspacedata[:] = shiftedfft  # Store data write-protected
-        self.orig_kspacedata.setflags(write=False)
-        self.kspacedata[:] = shiftedfft
+    @staticmethod
+    def normalise(f: np.ndarray):
+        """ Normalises array by "streching" all values to be between 0-255.
+
+        Parameters:
+            f (np.ndarray): input array
+        """
+        fmin = float(f.min())
+        fmax = float(f.max())
+        if fmax != fmin:
+            coeff = fmax - fmin
+            f[:] = np.floor((f[:] - fmin) / coeff * 255.)
+
+    @staticmethod
+    def apply_window(f: np.ndarray, window_val: dict = None):
+        """ Applies window values to the array
+
+        Excludes certain values based on window width and center before
+        applying normalisation on array f.
+        Window values are interpreted as percentages of the maximum
+        intensity of the actual image.
+        For example if window_val is 1, 0.5 and image has maximum intensity
+        of 196 then window width is 196, window center is 98.
+        Code applied from contrib-pydicom see license below:
+            Copyright (c) 2009 Darcy Mason, Adit Panchal
+            This file is part of pydicom, relased under an MIT license.
+            See the file LICENSE included with this distribution, also
+            available at https://github.com/pydicom/pydicom
+            Based on image.py from pydicom version 0.9.3,
+            LUT code added by Adit Panchal
+
+        Parameters:
+            f (np.ndarray): the array to be windowed
+            window_val (dict): window width and window center dict
+        """
+        fmax = np.max(f)
+        fmin = np.min(f)
+        if fmax != fmin:
+            ww = (window_val['ww'] * fmax) if window_val else fmax
+            wc = (window_val['wc'] * fmax) if window_val else (ww / 2)
+            w_low = wc - ww / 2
+            w_high = wc + ww / 2
+            f[:] = np.piecewise(f, [f <= w_low, f > w_high], [0, 255,
+                                lambda x: ((x - wc) / ww + 0.5) * 255])
 
     def prepare_displays(self, kscale: int = -3, lut: dict = None):
         """ Prepares kspace and image for display in the user interface
@@ -133,51 +182,9 @@ class ImageManipulators:
             kscale (int): kspace intensity scaling constant (10^kscale)
             lut (dict): window width and window center dict
         """
-        def apply_window(f: np.ndarray, window_val: dict = None):
-            """ Applies window values to the array
-
-            Excludes certain values based on window width and center before
-            applying normalisation on array f.
-            Window values are interpreted as percentages of the maximum
-            intensity of the actual image.
-            For example if window_val is 1, 0.5 and image has maximum intensity
-            of 196 then window width is 196, window center is 98.
-            Code applied from contrib-pydicom see license below:
-                Copyright (c) 2009 Darcy Mason, Adit Panchal
-                This file is part of pydicom, relased under an MIT license.
-                See the file LICENSE included with this distribution, also
-                available at https://github.com/pydicom/pydicom
-                Based on image.py from pydicom version 0.9.3,
-                LUT code added by Adit Panchal
-
-            Parameters:
-                f (np.ndarray): the array to be windowed
-                window_val (dict): window width and window center dict
-            """
-            fmax = np.max(f)
-            fmin = np.min(f)
-            if fmax != fmin:
-                ww = (window_val['ww'] * fmax) if window_val else fmax
-                wc = (window_val['wc'] * fmax) if window_val else (ww / 2)
-                w_low = wc - ww / 2
-                w_high = wc + ww / 2
-                f[:] = np.piecewise(f, [f <= w_low, f > w_high], [0, 255,
-                                    lambda x: ((x - wc) / ww + 0.5) * 255])
-
-        def normalise(f: np.ndarray):
-            """ Normalises array by "streching" all values to be between 0-255.
-
-            Parameters:
-                f: input array np.ndarray
-            """
-            fmin = float(f.min())
-            fmax = float(f.max())
-            if fmax != fmin:
-                coeff = fmax - fmin
-                f[:] = np.floor((f[:] - fmin) / coeff * 255.)
 
         # 1. Apply window to image
-        apply_window(self.img, lut)
+        self.apply_window(self.img, lut)
 
         # 2. Prepare kspace display - get magnitude then scale and normalise
         # K-space scaling: https://homepages.inf.ed.ac.uk/rbf/HIPR2/pixlog.htm
@@ -185,7 +192,7 @@ class ImageManipulators:
         if self.kspace_abs.max() > 0:
             scaling_c = np.power(10., kscale)
             np.log1p(self.kspace_abs * scaling_c, out=self.kspace_abs)
-            normalise(self.kspace_abs)
+            self.normalise(self.kspace_abs)
 
         # 3. Obtain uint8 type arrays for QML display
         self.image_display_data[:] = np.require(self.img, np.uint8)
@@ -720,7 +727,7 @@ class MainApp(QObject):
             im.filling(im.kspacedata, self.ui_filling.property("value"), mode)
 
         # Get the resulting image
-        im.np_ifft(im.kspacedata)
+        im.np_ifft(kspace=im.kspacedata, out=im.img)
 
         # Get display properties
         kspace_const = int(self.ui_ksp_const.property('value'))
