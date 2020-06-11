@@ -679,13 +679,6 @@ ApplicationWindow {
                         }
                     }
 
-                    Button {
-                        text: qsTr("SENSE/ASSET simulation")
-                        onClicked: {
-                            thumbnails.state !== "open" ? thumbnails.state = "open" : thumbnails.state = ""
-                        }
-                    }
-
                     Pane {
                         id: descriptionPane
                         parent: flickable_controls
@@ -727,49 +720,6 @@ ApplicationWindow {
         id: split_view
         anchors.fill: parent
         orientation: Qt.Vertical
-        Pane {
-            id: thumbnails
-            Material.background: "#666666"
-            visible: true
-            SplitView.minimumHeight: 0
-            SplitView.preferredHeight: 0
-            padding: 5
-            ListView {
-                id: thumbnails_containter
-                model: 12
-                anchors.fill: parent
-                orientation: Qt.Horizontal
-                spacing: 5
-                snapMode: ListView.SnapPosition
-                delegate: Rectangle {
-                    property int itemIndex: index
-                    // property string itemName: name
-                    height: thumbnails_containter.height - 10
-                    width: childrenRect.width
-                    color: "transparent"
-                    Image {
-                        fillMode: Image.PreserveAspectFit
-                        source: "image://imgs/image"
-                        height: parent.height
-                        smooth: false
-                    }
-                }
-                ScrollIndicator.horizontal: ScrollIndicator { }
-            }
-
-            states: [
-                State {
-                    name: "open"
-                    PropertyChanges {
-                        target: thumbnails
-                        SplitView.preferredHeight: 100
-                    }
-                }
-            ]
-            transitions: Transition {
-                    PropertyAnimation { properties: "SplitView.preferredHeight"; duration: 500}
-                }
-         }
 
         Pane {
             id: main_pane

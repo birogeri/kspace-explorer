@@ -111,7 +111,7 @@ class ImageManipulators:
             kspace (np.ndarray): Complex kspace ndarray
             out (np.ndarray): Array to store values
         """
-        np.absolute(ifftshift(ifft2(ifftshift(kspace))), out=out)
+        np.absolute(fftshift(ifft2(ifftshift(kspace))), out=out)
 
     @staticmethod
     def np_fft(img: np.ndarray, out: np.ndarray):
@@ -124,7 +124,7 @@ class ImageManipulators:
             img (np.ndarray): The NumPy ndarray to be transformed
             out (np.ndarray): Array to store output (must be same shape as img)
         """
-        out[:] = fftshift(fft2(fftshift(img)))
+        out[:] = fftshift(fft2(ifftshift(img)))
 
     @staticmethod
     def normalise(f: np.ndarray):
