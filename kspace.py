@@ -6,7 +6,8 @@ import numpy as np
 import pydicom
 from PIL import Image
 from PyQt5 import QtQuick
-from PyQt5.QtCore import QObject, pyqtSlot, QVariant, QUrl
+from PyQt5.QtCore import QObject, pyqtSlot, QVariant, QUrl, \
+    qInstallMessageHandler
 from PyQt5.QtGui import QImage, QPixmap, QColor, QIcon
 from PyQt5.QtQml import QQmlApplicationEngine
 from PyQt5.QtWidgets import QApplication
@@ -416,7 +417,7 @@ class ImageManipulators:
             kspace (np.ndarray): Complex kspace ndarray
             spikes (list): coordinates for the spikes (row, column)
         """
-        spike_intensity = kspace.max()*2
+        spike_intensity = kspace.max() * 2
         for spike in spikes:
             kspace[spike] = spike_intensity
 
@@ -433,7 +434,8 @@ class ImageManipulators:
          """
         for patch in patches:
             x, y, size = patch[0], patch[1], patch[2]
-            kspace[max(x-size, 0):x+size+1, max(y-size, 0):y+size+1] = 0
+            kspace[max(x - size, 0):x + size + 1,
+                   max(y - size, 0):y + size + 1] = 0
 
     @staticmethod
     def filling(kspace: np.ndarray, value: float, mode: int):
@@ -553,7 +555,7 @@ class MainApp(QObject):
             # When the image is inaccessible at load time
             del self.url_list[self.current_img]
         self.ui_droparea.setProperty("loaded_imgs", len(self.url_list))
-        self.ui_droparea.setProperty("curr_img", self.current_img+1)
+        self.ui_droparea.setProperty("curr_img", self.current_img + 1)
 
     @pyqtSlot(str, name="load_new_img")
     def load_new_img(self, urls: str):
@@ -804,6 +806,14 @@ if __name__ == "__main__":
 
     # Set the exception hook to our wrapping function
     sys.excepthook = my_exception_hook
+
+    def qt_message_handler(mode, context, message):
+        # https://doc.qt.io/qt-5/qtglobal.html#QtMsgType-enum
+        modes = ['Debug', 'Warning', 'Critical', 'Fatal', 'Info']
+        print("%s: %s (%s:%d, %s)" % (
+            modes[mode], message, context.file, context.line, context.file))
+
+    qInstallMessageHandler(qt_message_handler)
 
     # Loading resources
     import qrc

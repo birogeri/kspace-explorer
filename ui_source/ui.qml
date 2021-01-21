@@ -279,6 +279,7 @@ ApplicationWindow {
                     undersample_kspace.value = undersample_kspace.default_value
                     ksp_const.value = ksp_const.default_value
                     hamming.checked = hamming.default_value
+                    smooth.checked = smooth.default_value
                 }
             }
         }
@@ -324,8 +325,17 @@ ApplicationWindow {
                         width: parent.width
                         Switch {
                             property bool default_value: false
+                            id: smooth
+                            text: "Smooth image"
+                            //: Right drawer Smoothing Filter switch text
+                            Layout.fillWidth: true
+                            Layout.alignment: Qt.AlignLeft
+                            onCheckedChanged: image.smooth = !image.smooth
+                        }
+                        Switch {
+                            property bool default_value: false
                             id: hamming
-                            text: qsTr("Apply Hamming window")
+                            text: qsTr("Hamming window")
                             //: Right drawer switch button text
                             objectName: "hamming"
                             Layout.alignment: Qt.AlignLeft
