@@ -794,18 +794,7 @@ class ImageProvider(QtQuick.QQuickImageProvider):
 
 
 if __name__ == "__main__":
-    # Catching Python exceptions
-    sys._excepthook = sys.excepthook
-
-    def my_exception_hook(exctype, value, traceback):
-        # Print the error and traceback
-        print(exctype, value, traceback)
-        # Call the normal Exception hook after
-        sys._excepthook(exctype, value, traceback)
-        sys.exit(1)
-
-    # Set the exception hook to our wrapping function
-    sys.excepthook = my_exception_hook
+    # Handling QML messages and catching Python exceptions
 
     def qt_message_handler(mode, context, message):
         # https://doc.qt.io/qt-5/qtglobal.html#QtMsgType-enum
