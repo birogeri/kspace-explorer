@@ -4,6 +4,7 @@ from uuid import uuid4
 
 import numpy as np
 import pydicom
+from pydicom import errors
 from PIL import Image
 from PyQt5 import QtQuick
 from PyQt5.QtCore import QObject, pyqtSlot, QVariant, QUrl, \
@@ -26,7 +27,7 @@ finally:
     ifftshift = np.fft.ifftshift
 
 
-def open_img(path: str, array_dtype: np.dtype = np.float32) -> np.ndarray:
+def open_file(path: str, dtype: np.dtype = np.float32) -> np.ndarray:
     """Tries to load image data into a NumPy ndarray
 
     The function first tries to use the PIL Image library to identify and load
@@ -35,7 +36,7 @@ def open_img(path: str, array_dtype: np.dtype = np.float32) -> np.ndarray:
 
     Parameters:
         path (str): The image file location
-        array_dtype (np.dtype): image array dtype (eg. np.float64)
+        dtype (np.dtype): image array dtype (eg. np.float64)
 
     Returns:
         np.ndarray: a floating point NumPy ndarray of the specified dtype
@@ -44,57 +45,60 @@ def open_img(path: str, array_dtype: np.dtype = np.float32) -> np.ndarray:
     try:
         with Image.open(path) as f:
             img_file = f.convert('F')  # 'F' mode: 32-bit floating point pixels
-            img_pixel_array = np.array(img_file).astype(array_dtype)
+            img_pixel_array = np.array(img_file).astype(dtype)
         return img_pixel_array
     except FileNotFoundError:
         raise
     except OSError:
         try:
             with pydicom.dcmread(path) as dcm_file:
-                img_pixel_array = dcm_file.pixel_array.astype(array_dtype)
+                img_pixel_array = dcm_file.pixel_array.astype(dtype)
             img_pixel_array.setflags(write=True)
             return img_pixel_array
-        except Exception:
-            raise
+        except errors.InvalidDicomError:
+            try:
+                raw_data = np.load(path)
+                return raw_data
+            except Exception as e:
+                raise e
 
 
 class ImageManipulators:
-    """A class that contains the image and it's modifier methods
+    """A class that contains a 2D image and kspace pair and modifier methods
 
-    This class will load the specified image and performs any actions that
-    modify the image or kspace data. A new instance should be initialized for
-    any new images and the previous one will be garbage collected.
+    This class will load the specified image or raw data and performs any
+    actions that modify the image or kspace data. A new instance should be
+    initialized for new images.
     """
 
-    def __init__(self, path_to_img: str, high_precision: bool = False):
+    def __init__(self, pixel_data: np.ndarray, is_image: bool = True):
         """Opening the image and initializing variables based on image size
 
         Parameters:
-            path_to_img (str): Path to the image file
-            high_precision (bool): Use higher precision arrays (not in use)
+            pixel_data (np.ndarray): 2D pixel data of image or kspace
+            is_image (bool): True if the data is an Image, false if raw data
         """
 
-        # TODO: Add UI interface to change this
-        # Set array types according to user setting
-        if high_precision:
-            dtype_float = np.dtype(np.float64)
-            dtype_complex = np.dtype(np.complex128)
+        if is_image:
+            self.img = pixel_data.copy()
+            self.kspacedata = np.zeros_like(self.img, dtype=np.complex64)
         else:
-            dtype_float = np.dtype(np.float32)
-            dtype_complex = np.dtype(np.complex64)
+            self.kspacedata = pixel_data.copy()
+            self.img = np.zeros_like(self.kspacedata, dtype=np.float32)
 
-        self.img = open_img(path_to_img, dtype_float)
         self.image_display_data = np.require(self.img, np.uint8, 'C')
         self.kspace_display_data = np.zeros_like(self.image_display_data)
-        self.kspacedata = np.zeros_like(self.img, dtype=dtype_complex)
         self.orig_kspacedata = np.zeros_like(self.kspacedata)
-        self.kspace_abs = np.zeros_like(self.kspacedata, dtype=dtype_float)
+        self.kspace_abs = np.zeros_like(self.kspacedata, dtype=np.float32)
         self.noise_map = np.zeros_like(self.kspace_abs)
         self.signal_to_noise = 30
         self.spikes = []
         self.patches = []
 
-        self.np_fft(self.img, self.kspacedata)
+        if is_image:
+            self.np_fft(self.img, self.kspacedata)
+        else:
+            self.np_ifft(self.kspacedata, self.img)
 
         self.orig_kspacedata[:] = self.kspacedata  # Store data write-protected
         self.orig_kspacedata.setflags(write=False)
@@ -530,7 +534,7 @@ class MainApp(QObject):
                  "decrease_dc", "partial_fourier_slider", "undersample_kspace",
                  "high_pass_slider", "low_pass_slider", "ksp_const", "filling",
                  "hamming", "rdc_slider", "zero_fill", "compress", "droparea",
-                 "filling_mode"]
+                 "filling_mode", "thumbnails"]
 
         # Binding UI elements and controls
         for ctrl in ctrls:
@@ -539,6 +543,10 @@ class MainApp(QObject):
         # Initialise an empty list of image paths that can later be filled
         self.url_list = []
         self.current_img = 0
+        self.file_data = []
+        self.is_image = True
+        self.channels = 1
+        self.img_instances = {}
 
     def execute_load(self):
         """ Replaces the ImageManipulators class therefore changing the image
@@ -549,11 +557,31 @@ class MainApp(QObject):
         """
         global im
         try:
-            im = ImageManipulators(self.url_list[self.current_img])
-            self.update_displays()
-        except (FileNotFoundError, Exception):
+            path = self.url_list[self.current_img]
+            self.file_data = open_file(path)
+            self.is_image = False if len(self.file_data.shape) > 2 else True
+        except (FileNotFoundError, ValueError):
             # When the image is inaccessible at load time
             del self.url_list[self.current_img]
+
+        if self.is_image:
+            self.channels = 0
+            self.img_instances = {}
+            im = ImageManipulators(self.file_data, self.is_image)
+        else:
+            self.channels = self.file_data.shape[0]
+            for channel in range(self.channels):
+                # Extract 2D data slices from 3D array
+                file_data = self.file_data[channel, :, :]
+                self.img_instances[channel] = \
+                    ImageManipulators(file_data, self.is_image)
+            im = self.img_instances[0]
+
+        # Let the QML thumbnails list know about the number of channels
+        self.ui_thumbnails.setProperty("model", self.channels)
+
+        self.update_displays()
+
         self.ui_droparea.setProperty("loaded_imgs", len(self.url_list))
         self.ui_droparea.setProperty("curr_img", self.current_img + 1)
 
@@ -587,6 +615,18 @@ class MainApp(QObject):
             self.current_img += 1 if up else -1
             self.current_img %= len(self.url_list)
             self.execute_load()
+
+    @pyqtSlot(int, name="channel_change")
+    def channel_change(self, channel: int):
+        """ Called when channel is selected in the thumbnails bar
+
+        Parameters:
+            channel (int): Index of the selected channel
+
+        """
+        global im
+        im = self.img_instances[int(channel)]
+        self.update_displays()
 
     @pyqtSlot(str, name="save_img")
     def save_img(self, path):
@@ -671,6 +711,16 @@ class MainApp(QObject):
             setProperty("source", "image://imgs/kspace_%s" % uuid4().hex)
         self.ui_image_display. \
             setProperty("source", "image://imgs/image_%s" % uuid4().hex)
+
+        #  Iterate through thumbnails and set source image to trigger reload
+        for item in self.ui_thumbnails.childItems()[0].childItems():
+            try:
+                oname = item.childItems()[0].property("objectName")
+                source = "image://imgs/" + oname + "_%s" % uuid4().hex
+                item.childItems()[0].setProperty("source", source)
+            except IndexError:
+                # Highlight component of the ListView does not have childItems
+                pass
 
     def image_change(self):
         """ Apply kspace modifiers to kspace and get resulting image"""
@@ -782,6 +832,15 @@ class ImageProvider(QtQuick.QQuickImageProvider):
                               im.kspace_display_data.strides[0],  # bytes/line
                               QImage.Format_Grayscale8)           # format
 
+            elif id_str.startswith('thumb'):
+                thumb_id = int(id_str[6:6+id_str[6:].find('_')])
+                im_c = py_mainapp.img_instances[thumb_id]
+                q_im = QImage(im_c.image_display_data,             # data
+                              im_c.image_display_data.shape[1],    # width
+                              im_c.image_display_data.shape[0],    # height
+                              im_c.image_display_data.strides[0],  # bytes/line
+                              QImage.Format_Grayscale8)            # format
+
             else:
                 raise NameError
 
@@ -824,7 +883,7 @@ if __name__ == "__main__":
 
     # Image manipulator and storage initialisation with default image
     engine.addImageProvider("imgs", ImageProvider())
-    im = ImageManipulators(default_image)
+    im = ImageManipulators(open_file(default_image), is_image=True)
 
     # Loading GUI file
     # engine.load('ui_source/ui.qml')

@@ -26,6 +26,15 @@ ApplicationWindow {
         onActivated: drawer_right.open()
     }
 
+    Shortcut {
+        sequence: "k"
+        onActivated: thumbnails.model ? thumbnails.currentIndex = (thumbnails.currentIndex+1) % thumbnails.model : 0
+    }
+    Shortcut {
+        sequence: "j"
+        onActivated: thumbnails.model ? thumbnails.currentIndex = (thumbnails.currentIndex-1+thumbnails.model) % thumbnails.model : 0
+    }
+
     header: ToolBar {
         id: toolbar
         Material.foreground: "white"
@@ -730,6 +739,60 @@ ApplicationWindow {
         id: split_view
         anchors.fill: parent
         orientation: Qt.Vertical
+        Pane {
+            id: top_pane
+            Material.background: "#666666"
+            visible: thumbnails.model
+            SplitView.minimumHeight: 0
+            SplitView.preferredHeight: 0
+            padding: 5
+            ListView {
+                id: thumbnails
+                objectName: "thumbnails"
+                model: 0
+                anchors.fill: parent
+                orientation: Qt.Horizontal
+                spacing: 5
+                snapMode: ListView.SnapPosition
+                delegate: Rectangle {
+                    property int itemIndex: index
+                    objectName: "rect" + itemIndex
+                    height: thumbnails.height - 10
+                    width: childrenRect.width
+                    color: thumbnails.currentIndex == index ? "steelblue" : "white"
+                    Image {
+                        objectName: "thumb_" + parent.itemIndex
+                        fillMode: Image.PreserveAspectFit
+                        source: "image://imgs/" + objectName + "_"
+                        height: parent.height - 3
+                        smooth: false
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: {
+                                thumbnails.currentIndex = parent.parent.itemIndex
+                            }
+                       }
+                    }
+
+                }
+                onVisibleChanged: top_pane.visible == true ? top_pane.state = "open" : top_pane.state = ""
+                onCurrentIndexChanged: py_MainApp.channel_change(currentIndex)
+                ScrollIndicator.horizontal: ScrollIndicator { objectName: "lol" }
+            }
+
+            states: [
+                State {
+                    name: "open"
+                    PropertyChanges {
+                        target: top_pane
+                        SplitView.preferredHeight: 100
+                    }
+                }
+            ]
+            transitions: Transition {
+                    PropertyAnimation { properties: "SplitView.preferredHeight"; duration: 500}
+                }
+         }
 
         Pane {
             id: main_pane
