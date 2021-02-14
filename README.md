@@ -53,14 +53,18 @@ Navigate to the folder that contains the extracted software and run it by typing
     python kspace.py
 ```
 
-**Alternatively (on Windows)**
+### Alternatively (on Windows)
 
 To save you navigating on Windows, 
-just open the folder where the app was extracted and: 
+just open the folder where the app was extracted and:
+
 * Click the address bar (the line that looks something 
 like this: *"This PC > Downloads > kspace-explorer-master"*)
 * Delete the address and type ```cmd``` and press Enter
 * A window should appear, and you can now type ```python kspace.py```
+
+---
+
 ## **Usage**
 
 KSE automatically loads a default image but you can
@@ -70,7 +74,13 @@ easily switch images by either:
 * Pressing `Ctrl+O`
 * Simply by drag and dropping a file or files
 
-### Accessing the k-space modifiers
+You can also load a prepared raw data file to view a multi-channel image acquisition. Please refer to the relevant section for instructions.
+
+| ![Screenshot from k-Space Tutorial by D. Moratal et al.](docs/herringbone.png) |
+|:--:|
+| *A real-life herringbone artefact and the corresponding k-space* |
+
+### **Accessing the k-space modifiers**
 
 There are various modifiers available to edit the k-space and see the effects on the resulting image. These are accessible from the drawer panel on the right. To access it:
 
@@ -78,7 +88,7 @@ There are various modifiers available to edit the k-space and see the effects on
 * Press the `Tab` key
 * Click the round button ![Drawer open icon](docs/tune-vertical.png) on the lower right side
 
-### Simulating image acquisition
+### **Simulating image acquisition**
 
 You can use the controls in the footer. The footer can be toggled by using the toolbar icon ![Footer toggle icon](docs/layout-footer.png) or by hitting `F7`
 
@@ -86,7 +96,7 @@ You can use the controls in the footer. The footer can be toggled by using the t
 * To rewind press Rewind ![Rewind icon](docs/skip-backward.png) or press ``F4``
 * You can change the simulation mode with the dropdown box on right-hand side
 
-### Saving images
+### **Saving images**
 
 Your modified images can be saved to your computer by either
 
@@ -97,7 +107,7 @@ Then select the location and the filename. Visual representation of the k-space 
 
 *Please note that if you select the tiff format, k-space image will be saved with 32-bit depth. This not handled well with many image viewers.*
 
-### Brightness/contrast and windowing
+### **Brightness/contrast and windowing**
 
 To enhance certain parts of the image for viewing it is often useful to change the **brightness** or **contrast** of the displays.
 
@@ -109,14 +119,74 @@ With **windowing** it is possible to limit the displayed image pixel intensity r
 * Drag mouse left/right with middle mouse button pressed to change window width
 * Drag mouse up/down with middle mouse button pressed to change window centre
 
+### **Loading a raw data file**
+
+K-space Explorer can load a specially prepared (simplified) raw data file, which can contain data from multiple coil elements.
+An example file can be found in the images folder (obtained from [Harvard SMURF public domain repository](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/XNMCYI) [1]).
+
+The raw data file can be loaded just like a normal image - drag & drop or using the Open New Image dialog.
+
+| ![Multi-channel image loaded in K-space Explorer](docs/multichannel.png) |
+|:--:|
+| *Multi-channel raw data viewer interface of K-space Explorer* |
+
+### **Expected raw data structure**
+
+The raw data file is a simple 3D numpy array with [channel, rows, columns] arrangement. If the array is prepared in Python it can be saved to .npy file with the [numpy.save](https://numpy.org/doc/stable/reference/generated/numpy.save.html) function.
+
+Raw data can be obtained from the scanner with differing methods and proprietary formats determined by the scanner vendor.
+Siemens scanner raw data can be exported using [this tutorial](https://www.nmr.mgh.harvard.edu/~greve/siemens-raw-save.html). The .dat file can be processed in Python using the [twixtools package](https://github.com/mrphysics-bonn/twixtools) from the *German Center for Neurodegenerative Diseases within the Helmholtz Association (DZNE)*.
+
+See the example script below on how to read the image data and save it to the format K-space explorer can handle.
+
+#### **Example script to read Siemens raw data file and save it for K-space Explorer**
+
+```python
+import numpy as np
+import twixtools
+
+filename = "knee_TSE_V2_waterSat.dat"
+save_as = "knee_kspace_explorer"
+
+
+def import_kspace(mdb_list):
+    # Function taken from twixtools documentation
+    image_mdbs = []
+    for mdb in mdb_list:
+        if mdb.is_image_scan():
+            image_mdbs.append(mdb)
+
+    n_line = 1 + max([mdb.cLin for mdb in image_mdbs])
+    n_part = 1 + max([mdb.cPar for mdb in image_mdbs])
+    n_channel, n_column = image_mdbs[0].data.shape
+
+    out = np.zeros([n_part, n_line, n_channel, n_column], dtype=np.complex64)
+    for mdb in image_mdbs:
+        out[mdb.cPar, mdb.cLin] += mdb.data
+
+    return out
+
+
+twix_data = import_kspace(twixtools.read_twix(filename)[-1]['mdb'])
+extract_part0 = np.zeros((twix_data.shape[1:4]), dtype=np.dtype(np.complex64))
+extract_part0[:, :, :] = twix_data[0, :, :, :]
+# Reorder axis to [channel, row, column]
+array_to_save = np.transpose(extract_part0, (1, 0, 2))
+# Optional - rotate all channels by 90 degress
+# array_to_save = np.rot90(array_to_save, 3, (1, 2))
+np.save(save_as, array_to_save, allow_pickle=False)
+```
+
+---
+
 ## **Comparison to Other Similar Projects**
 
-This app was directly influenced by the article of D. Moratal et al. [1], however my aim was to go beyond the functionality that it offers. Several similar software is available for different computing environments. Here is a non-exhaustive list of them:
+This app was directly influenced by the article of D. Moratal et al. [2], however my aim was to go beyond the functionality that it offers. Several similar software is available for different computing environments. Here is a non-exhaustive list of them:
 
-* [k-Space Tutorial](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3097694/) (PC, Matlab) [1]
-* [Journey through k-space](http://ww3.comsats.edu.pk/miprg/Downloads.aspx) (PC, Matlab) [2]
-* [A k-Space Odyssey](https://www.kspace.info/) (iOS) [3]
-* [K-Spapp](https://mrapps.jouwweb.nl/) (Android, free) [4]
+* [k-Space Tutorial](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3097694/) (PC, Matlab) [2]
+* [Journey through k-space](http://ww3.comsats.edu.pk/miprg/Downloads.aspx) (PC, Matlab) [3]
+* [A k-Space Odyssey](https://www.kspace.info/) (iOS) [4]
+* [K-Spapp](https://mrapps.jouwweb.nl/) (Android, free) [5]
 
 | ![Screenshot from k-Space Tutorial by D. Moratal et al.](docs/k_Space_Tutorial.jpg) |
 |:--:|
@@ -131,17 +201,15 @@ This app was directly influenced by the article of D. Moratal et al. [1], howeve
 
 The aim of K-space Explorer is to provide a smooth, modern UI with familiar tools and instant response whenever possible. Updates happen real time so immediate feedback is given for the effect of the changes.
 
-| ![Screenshot from k-Space Tutorial by D. Moratal et al.](docs/herringbone.png) |
-|:--:|
-| *A real-life herringbone artefact and the corresponding k-space* |
-
 ### Free and Open Source
 
 To get a deeper understanding of the inner workings the code can be inspected. In-line documentation can help understanding the mathematical principles behind various interactions.
 
+---
+
 ## Latest changes
 
-* Added k-space *Patch tool* to eliminate spikes
+* View raw data with images from a multi-channel acquisition
 
 ## Known bugs
 
@@ -170,11 +238,14 @@ applied by the scanner software.
 ## References
 
 ```references
-    [1] Moratal, D., Vallés-Luch, A., Martí-Bonmati, L., & Brummers, M. E. (2008). k-Space tutorial: An MRI educational tool for a better understanding of k-space. Biomedical Imaging and Intervention Journal, 4(1). http://doi.org/10.2349/biij.4.1.e15
+    [1] Bachrata, Beata, 2020, "SMURF (raw MRI data)", https://doi.org/10.7910/DVN/XNMCYI, Harvard Dataverse, V3
+    
+    [2] Moratal, D., Vallés-Luch, A., Martí-Bonmati, L., & Brummers, M. E. (2008). k-Space tutorial: An MRI educational tool for a better understanding of k-space. Biomedical Imaging and Intervention Journal, 4(1). http://doi.org/10.2349/biij.4.1.e15
 
-    [2] Qureshi, M., Kaleem, M., & Omer, H. (2017). Journey through k-space: An interactive educational tool. Biomedical Research (India), 28(4), 1618–1623.
+    [3] Qureshi, M., Kaleem, M., & Omer, H. (2017). Journey through k-space: An interactive educational tool. Biomedical Research (India), 28(4), 1618–1623.
 
-    [3] Ridley, E. L. (21/03/2017). Mobile App Spotlight: A k-Space Odyssey. Source: AuntMinnie.com: https://www.auntminnie.com/index.aspx?sec=sup&sub=mri&pag=dis&ItemID=116900&wf=7612
+    [4] Ridley, E. L. (21/03/2017). Mobile App Spotlight: A k-Space Odyssey. Source: AuntMinnie.com: https://www.auntminnie.com/index.aspx?sec=sup&sub=mri&pag=dis&ItemID=116900&wf=7612
 
-    [4] K-Spapp - https://mrapps.jouwweb.nl/
+    [5] K-Spapp - https://mrapps.jouwweb.nl/
+    
 ```

@@ -776,7 +776,7 @@ ApplicationWindow {
 
                 }
                 onVisibleChanged: top_pane.visible == true ? top_pane.state = "open" : top_pane.state = ""
-                onCurrentIndexChanged: py_MainApp.channel_change(currentIndex)
+                onCurrentIndexChanged: if (currentIndex >= 0) {py_MainApp.channel_change(currentIndex)}
                 ScrollIndicator.horizontal: ScrollIndicator { objectName: "lol" }
             }
 
@@ -785,7 +785,7 @@ ApplicationWindow {
                     name: "open"
                     PropertyChanges {
                         target: top_pane
-                        SplitView.preferredHeight: 100
+                        SplitView.preferredHeight: 200
                     }
                 }
             ]
