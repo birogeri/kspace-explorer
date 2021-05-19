@@ -19,7 +19,7 @@ try:
 
     fft2 = m.fft2
     ifft2 = m.ifft2
-except ModuleNotFoundError:
+except (ModuleNotFoundError, ImportError):
     fft2 = np.fft.fft2
     ifft2 = np.fft.ifft2
 finally:
@@ -361,9 +361,9 @@ class ImageManipulators:
 
         Applies a 2D Hamming filter to reduce Gibbs ringing
         References:
-            http://mriquestions.com/gibbs-artifact.html
+            https://mriquestions.com/gibbs-artifact.html
             https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4058219/
-            http://www.roberthovden.com/tutorial/2015/fftartifacts.html
+            https://www.roberthovden.com/tutorial/2015/fftartifacts.html
 
         Parameters:
             kspace: Complex k-space numpy.ndarray
