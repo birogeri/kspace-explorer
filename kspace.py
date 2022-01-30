@@ -262,7 +262,7 @@ class ImageManipulators:
         if radius > 0:
             r = np.hypot(*kspace.shape) / 2 * radius / 100
             rows, cols = np.array(kspace.shape, dtype=int)
-            a, b = np.floor(np.array((rows, cols)) / 2).astype(np.int)
+            a, b = np.floor(np.array((rows, cols)) / 2).astype(int)
             y, x = np.ogrid[-a:rows - a, -b:cols - b]
             mask = x * x + y * y <= r * r
             kspace[mask] = 0
@@ -284,7 +284,7 @@ class ImageManipulators:
         if radius < 100:
             r = np.hypot(*kspace.shape) / 2 * radius / 100
             rows, cols = np.array(kspace.shape, dtype=int)
-            a, b = np.floor(np.array((rows, cols)) / 2).astype(np.int)
+            a, b = np.floor(np.array((rows, cols)) / 2).astype(int)
             y, x = np.ogrid[-a:rows - a, -b:cols - b]
             mask = x * x + y * y <= r * r
             kspace[~mask] = 0
