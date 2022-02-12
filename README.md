@@ -24,6 +24,19 @@ If you find it useful please consider [buying me a coffee with PayPal](https://w
 
 ---
 
+## **Contents**
+* [Installation](#installation)
+* [Starting the program](#starting-the-program)
+* [Usage](#usage)
+* [Comparison to Other Similar Projects](#comparison-to-other-similar-projects)
+* [Latest changes](#latest-changes)
+* [Known bugs](#known-bugs)
+* [Planned features](#planned-features)
+* [Disclaimer and limitations](#disclaimer-and-limitations)
+* [Author & Contributors](#author--contributors)
+* [References](#references)
+
+
 ## **Installation**
 
 1. You will need to have the following software and packages
@@ -209,6 +222,7 @@ To get a deeper understanding of the inner workings the code can be inspected. I
 
 ## Latest changes
 
+* Basic logging
 * View raw data with images from a multi-channel acquisition
 
 ## Known bugs
