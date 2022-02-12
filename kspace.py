@@ -2,16 +2,33 @@ import sys
 import pathlib
 from uuid import uuid4
 
+import logging.config
+import PIL
 import numpy as np
 import pydicom
 from pydicom import errors
 from PIL import Image
 from PyQt5 import QtQuick
 from PyQt5.QtCore import QObject, pyqtSlot, QVariant, QUrl, \
-    qInstallMessageHandler
+    qInstallMessageHandler, Qt
 from PyQt5.QtGui import QImage, QPixmap, QColor, QIcon
 from PyQt5.QtQml import QQmlApplicationEngine
-from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWidgets import QApplication, QMessageBox
+
+# Logging setup
+logging.config.fileConfig(fname='logging.conf', disable_existing_loggers=False)
+log = logging.getLogger(__name__)
+log.info(f'K-space Explorer started')
+log.info(f'Platform: {sys.platform}')
+log.info(f'Python: {sys.version}')
+if sys.version_info >= (3, 8):  # importlib.metadata needs Python 3.8 or newer
+    from importlib.metadata import version
+    log.info(
+        f'Pillow: {version("Pillow")}, '
+        f'PyQt5: {version("PyQt5")}, '
+        f'numpy: {version("numpy")}, '
+        f'pydicom: {version("pydicom")}')
+
 
 # Attempting to use mkl_fft (faster FFT library for Intel CPUs). Fallback is np
 try:
@@ -27,6 +44,26 @@ finally:
     ifftshift = np.fft.ifftshift
 
 
+def qt_msgbox(text='', fatal=False):
+    link = 'https://github.com/birogeri/kspace-explorer/issues'
+    suffix = '\n\nA log file has been created.'
+    if fatal:
+        suffix += '\nK-space Explorer will quit.'
+    error_text = f"Error - Get help on <a href='{link}'>GitHub</a>"
+
+    msg = QMessageBox()
+    msg.setIcon(QMessageBox.Critical)
+    msg.setTextFormat(Qt.RichText)
+    msg.setText(error_text)
+    msg.setInformativeText(text + suffix)
+    msg.setWindowTitle("Error")
+    msg.exec_()
+    if fatal:
+        sys.exit()
+    else:
+        return msg.result()
+
+
 def open_file(path: str, dtype: np.dtype = np.float32) -> np.ndarray:
     """Tries to load image data into a NumPy ndarray
 
@@ -36,30 +73,39 @@ def open_file(path: str, dtype: np.dtype = np.float32) -> np.ndarray:
 
     Parameters:
         path (str): The image file location
-        dtype (np.dtype): image array dtype (eg. np.float64)
+        dtype (np.dtype): image array dtype (e.g. np.float64)
 
     Returns:
         np.ndarray: a floating point NumPy ndarray of the specified dtype
     """
 
     try:
+        log.info(f'Opening file: {path}')
         with Image.open(path) as f:
             img_file = f.convert('F')  # 'F' mode: 32-bit floating point pixels
             img_pixel_array = np.array(img_file).astype(dtype)
+        log.info(f"Image loaded. Image size: {img_pixel_array.shape}")
         return img_pixel_array
     except FileNotFoundError:
-        raise
-    except OSError:
+        log.error("File not found", exc_info=True)
+        if 'im' not in globals():   # Quit gracefully if first start fails
+            qt_msgbox(f"File not found. ({path}).", fatal=True)
+    except PIL.UnidentifiedImageError:
+        log.info(f'Filetype is not recognised by PIL. Trying pydicom.')
         try:
             with pydicom.dcmread(path) as dcm_file:
                 img_pixel_array = dcm_file.pixel_array.astype(dtype)
             img_pixel_array.setflags(write=True)
+            log.info(f"DICOM loaded. Image size: {img_pixel_array.shape}")
             return img_pixel_array
         except errors.InvalidDicomError:
+            log.info(f'Cannot open with pydicom. Trying to open as raw data.')
             try:
                 raw_data = np.load(path)
+                log.info(f"Raw data loaded. Data size: {raw_data.shape}")
                 return raw_data
             except Exception as e:
+                log.error("Failed to open file", exc_info=True)
                 raise e
 
 
@@ -185,7 +231,7 @@ class ImageManipulators:
         intensity pixels will be intensity level 255 and 0 respectively)
         Similarly the image is prepared with the addition of windowing
         (excluding certain values based on user preference before normalisation
-         eg. intensity lower than 20 and higher than 200).
+        e.g. intensity lower than 20 and higher than 200).
 
         Parameters:
             kscale (int): kspace intensity scaling constant (10^kscale)
@@ -414,7 +460,7 @@ class ImageManipulators:
     def apply_spikes(kspace: np.ndarray, spikes: list):
         """Overlays spikes to kspace
 
-        Applies spikes (max value pixels) to the kspace data at the specified
+        Apply spikes (max value pixels) to the kspace data at the specified
         coordinates.
 
         Parameters:
@@ -429,7 +475,7 @@ class ImageManipulators:
     def apply_patches(kspace, patches: list):
         """Applies patches to kspace
 
-         Applies patches (zero value squares) to the kspace data at the
+         Apply patches (zero value squares) to the kspace data at the
          specified coordinates and size.
 
          Parameters:
@@ -558,11 +604,14 @@ class MainApp(QObject):
         global im
         try:
             path = self.url_list[self.current_img]
+            log.info(f"Changing to image: {path}")
             self.file_data = open_file(path)
             self.is_image = False if len(self.file_data.shape) > 2 else True
-        except (FileNotFoundError, ValueError):
-            # When the image is inaccessible at load time
+        except (FileNotFoundError, ValueError, AttributeError):
+            # When the image is inaccessible at load time, the error
+            qt_msgbox(f"Cannot load file ({self.url_list[self.current_img]})")
             del self.url_list[self.current_img]
+            return
 
         if self.is_image:
             self.channels = 0
@@ -594,6 +643,8 @@ class MainApp(QObject):
         Parameters:
             urls: list of QUrls to be opened
         """
+
+        log.info(f"New image list: {urls}")
 
         # Two or more files dropped become comma separated string of urls.
         self.current_img = 0
@@ -845,7 +896,7 @@ class ImageProvider(QtQuick.QQuickImageProvider):
                 raise NameError
 
         except NameError:
-            # On error we return a red image of requested size
+            # On error, we return a red image of requested size
             q_im = QPixmap(requested_size)
             q_im.fill(QColor('red'))
 
@@ -853,8 +904,10 @@ class ImageProvider(QtQuick.QQuickImageProvider):
 
 
 if __name__ == "__main__":
-    # Handling QML messages and catching Python exceptions
+    """ Main application entry point
+    """
 
+    # Handling QML messages and catching Python exceptions
     def qt_message_handler(mode, context, message):
         # https://doc.qt.io/qt-5/qtglobal.html#QtMsgType-enum
         modes = ['Debug', 'Warning', 'Critical', 'Fatal', 'Info']
@@ -869,7 +922,6 @@ if __name__ == "__main__":
     default_image = 'images/default.dcm'
     app_path = pathlib.Path(__file__).parent.absolute()
     default_image = str(app_path.joinpath(default_image))
-
     # Main application start
     app = QApplication([])
 
