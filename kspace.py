@@ -597,8 +597,8 @@ class MainApp(QObject):
 
         # Two or more files dropped become comma separated string of urls.
         self.current_img = 0
-        self.url_list = urls.split(",")
-        self.url_list[:] = [s.replace('file:///', '') for s in self.url_list]
+        self.url_list = urls.split("file:///")[1:]
+        self.url_list[:] = [s.rstrip(',') for s in self.url_list]
         self.ui_droparea.setProperty("loaded_imgs", len(self.url_list))
         self.ui_droparea.setProperty("curr_img", self.current_img + 1)
         self.execute_load()
