@@ -634,8 +634,8 @@ class MainApp(QObject):
         self.ui_droparea.setProperty("loaded_imgs", len(self.url_list))
         self.ui_droparea.setProperty("curr_img", self.current_img + 1)
 
-    @pyqtSlot(str, name="load_new_img")
-    def load_new_img(self, urls: str):
+    @pyqtSlot(QVariant, name="load_new_img")
+    def load_new_img(self, urls: list):
         """ Image loader
 
         Loads an image from the specified path
@@ -646,10 +646,11 @@ class MainApp(QObject):
 
         log.info(f"New image list: {urls}")
 
-        # Two or more files dropped become comma separated string of urls.
         self.current_img = 0
-        self.url_list = urls.split("file:///")[1:]
-        self.url_list[:] = [s.rstrip(',') for s in self.url_list]
+
+        # Using QUrl.toLocalFile to convert list elements to strings
+        self.url_list[:] = [s.toLocalFile() for s in urls]
+
         self.ui_droparea.setProperty("loaded_imgs", len(self.url_list))
         self.ui_droparea.setProperty("curr_img", self.current_img + 1)
         self.execute_load()
