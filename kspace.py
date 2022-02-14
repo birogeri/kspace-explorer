@@ -18,6 +18,8 @@ from PyQt5.QtWidgets import QApplication, QMessageBox
 # Logging setup
 logging.config.fileConfig(fname='logging.conf', disable_existing_loggers=False)
 log = logging.getLogger(__name__)
+if len(sys.argv) > 1:
+    log.setLevel('DEBUG') if sys.argv[1] == '--log' else None
 log.info(f'K-space Explorer started')
 log.info(f'Platform: {sys.platform}')
 log.info(f'Python: {sys.version}')
@@ -28,6 +30,8 @@ if sys.version_info >= (3, 8):  # importlib.metadata needs Python 3.8 or newer
         f'PyQt5: {version("PyQt5")}, '
         f'numpy: {version("numpy")}, '
         f'pydicom: {version("pydicom")}')
+else:
+    log.info('Pillow: n/a, PyQt5: n/a, numpy: n/a, pydicom: n/a')
 
 
 # Attempting to use mkl_fft (faster FFT library for Intel CPUs). Fallback is np
@@ -184,8 +188,8 @@ class ImageManipulators:
         Parameters:
             f (np.ndarray): input array
         """
-        fmin = float(f.min())
-        fmax = float(f.max())
+        fmin = float(np.min(f))
+        fmax = float(np.max(f))
         if fmax != fmin:
             coeff = fmax - fmin
             f[:] = np.floor((f[:] - fmin) / coeff * 255.)
@@ -244,7 +248,7 @@ class ImageManipulators:
         # 2. Prepare kspace display - get magnitude then scale and normalise
         # K-space scaling: https://homepages.inf.ed.ac.uk/rbf/HIPR2/pixlog.htm
         np.absolute(self.kspacedata, out=self.kspace_abs)
-        if self.kspace_abs.max() > 0:
+        if np.any(self.kspace_abs):
             scaling_c = np.power(10., kscale)
             np.log1p(self.kspace_abs * scaling_c, out=self.kspace_abs)
             self.normalise(self.kspace_abs)
@@ -254,7 +258,7 @@ class ImageManipulators:
         self.kspace_display_data[:] = np.require(self.kspace_abs, np.uint8)
 
     def resize_arrays(self, size: (int, int)):
-        """ Resize arrays for image size changes (eg. remove kspace lines etc.)
+        """ Resize arrays for image size changes (e.g. remove kspace lines etc.)
 
         Called by undersampling kspace and the image_change method. If the FOV
         is modified, image_change will reset the size based on the original
@@ -272,7 +276,7 @@ class ImageManipulators:
 
     @staticmethod
     def reduced_scan_percentage(kspace: np.ndarray, percentage: float):
-        """Deletes the a percentage of lines from the kspace in phase direction
+        """Deletes a percentage of lines from the kspace in phase direction
 
         Deletes an equal number of lines from the top and bottom of kspace
         to only keep the specified percentage of sampled lines. For example if
@@ -340,9 +344,9 @@ class ImageManipulators:
                   current_noise: np.ndarray, generate_new_noise=False):
         """Adds random Guassian white noise to k-space
 
-        Adds noise to the image to simulate an image with the given signal to
-        noise ratio where SNR [dB] = 20log10(S/N) where S is the mean signal
-        and N is the standard deviation of the noise.
+        Adds noise to the image to simulate an image with the given
+        signal-to-noise ratio, so that SNR [dB] = 20log10(S/N)
+        where S is the mean signal and N is the standard deviation of the noise.
 
         Parameters:
             kspace (np.ndarray): Complex kspace ndarray
@@ -391,9 +395,9 @@ class ImageManipulators:
                 s = (shift_ver, shift_hor)
 
                 # 1. Obtain a view of the array backwards (rotated 180 degrees)
-                # 2. If the peak is off center horizontally (eg. number of
-                #       columns or rows is even) roll lines to realign highest
-                #       amplitude parts
+                # 2. If the peak is off center horizontally (e.g. number of
+                #       columns or rows is even) roll lines to realign the
+                #       highest amplitude parts
                 # 3. Do the same vertically
                 kspace[-rows_to_skip:] = \
                     np.roll(kspace[::-1, ::-1], s, axis=(0, 1))[-rows_to_skip:]
@@ -450,7 +454,7 @@ class ImageManipulators:
 
         Parameters:
             kspace: Complex k-space numpy.ndarray
-            percentage: reduce DC value by this value
+            percentage: reduce the DC value by this value
         """
         x = kspace.shape[0] // 2
         y = kspace.shape[1] // 2
@@ -467,7 +471,7 @@ class ImageManipulators:
             kspace (np.ndarray): Complex kspace ndarray
             spikes (list): coordinates for the spikes (row, column)
         """
-        spike_intensity = kspace.max() * 2
+        spike_intensity = np.max(kspace) * 2
         for spike in spikes:
             kspace[spike] = spike_intensity
 
@@ -848,7 +852,7 @@ class MainApp(QObject):
 
 class ImageProvider(QtQuick.QQuickImageProvider):
     """
-    Contains the interface between numpy and qt
+    Contains the interface between numpy and Qt.
     Qt calls MainApp.update_displays on UI change
     that method requests new images to display
     pyqt channels it back to Qt GUI
@@ -909,16 +913,20 @@ if __name__ == "__main__":
     """
 
     # Handling QML messages and catching Python exceptions
-    def qt_message_handler(mode, context, message):
+    def qt_msg_handler(mode, context, message):
         # https://doc.qt.io/qt-5/qtglobal.html#QtMsgType-enum
-        modes = ['Debug', 'Warning', 'Critical', 'Fatal', 'Info']
-        print("%s: %s (%s:%d, %s)" % (
-            modes[mode], message, context.file, context.line, context.file))
+        # modes = ['Debug', 'Warning', 'Critical', 'Fatal', 'Info']
+        py_log_lvl = [10, 30, 50, 0, 20]
+        log.log(py_log_lvl[mode], f'{message}, ({context.file}:{context.line})')
+        # For debugging
+        # print("%s: %s (%s:%d, %s)" % (
+        #     modes[mode], message, context.file, context.line, context.file))
 
-    qInstallMessageHandler(qt_message_handler)
+    qInstallMessageHandler(qt_msg_handler)
 
     # Loading resources
     import qrc
+    log.info(f'Qt resource size (qrc.py): {len(qrc.qt_resource_data)} bytes')
 
     default_image = 'images/default.dcm'
     app_path = pathlib.Path(__file__).parent.absolute()

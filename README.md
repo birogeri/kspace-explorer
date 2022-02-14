@@ -192,6 +192,24 @@ np.save(save_as, array_to_save, allow_pickle=False)
 
 ---
 
+## **Troubleshooting**
+
+If the app does not behave as expected, 
+you can [post issues here](https://github.com/birogeri/kspace-explorer/issues) with your GitHub account.
+
+To help diagnose the prbolem, please try and run it with logging enabled.
+To enable logging mode, run K-space Explorer with `--log` command line argument.
+
+``` shell
+    python kspace.py --log
+```
+
+The file `kspace.log` will be populated with debugging information.
+You can then [upload the contents of the file here](https://gist.github.com/) 
+and add a link of the published log in your issue.
+
+---
+
 ## **Comparison to Other Similar Projects**
 
 This app was directly influenced by the article of D. Moratal et al. [2], however my aim was to go beyond the functionality that it offers. Several similar software is available for different computing environments. Here is a non-exhaustive list of them:
