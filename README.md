@@ -6,7 +6,7 @@ Fourier transform.**
 
 ![Demo](docs/demo.gif)
 
-K-space Explorer is written in Python 3 and uses open source libraries so
+K-space Explorer is written in Python 3 and uses open source libraries, so
 it can be used for free and the source code can be inspected to peek under
 the hood.
 
@@ -28,6 +28,7 @@ If you find it useful please consider [buying me a coffee with PayPal](https://w
 * [Installation](#installation)
 * [Starting the program](#starting-the-program)
 * [Usage](#usage)
+* [Troubleshooting](#troubleshooting)
 * [Comparison to Other Similar Projects](#comparison-to-other-similar-projects)
 * [Latest changes](#latest-changes)
 * [Known bugs](#known-bugs)
@@ -80,14 +81,14 @@ like this: *"This PC > Downloads > kspace-explorer-master"*)
 
 ## **Usage**
 
-KSE automatically loads a default image but you can
+KSE automatically loads a default image, but you can
 easily switch images by either:
 
 * Clicking Open New Image ![Open folder icon](docs/folder-open.png) on the toolbar
 * Pressing `Ctrl+O`
 * Simply by drag and dropping a file or files
 
-You can also load a prepared raw data file to view a multi-channel image acquisition. Please refer to the relevant section for instructions.
+You can also load a prepared raw data file to view a multichannel image acquisition. Please refer to the relevant section for instructions.
 
 | ![Screenshot from k-Space Tutorial by D. Moratal et al.](docs/herringbone.png) |
 |:--:|
@@ -135,7 +136,7 @@ With **windowing** it is possible to limit the displayed image pixel intensity r
 ### **Loading a raw data file**
 
 K-space Explorer can load a specially prepared (simplified) raw data file, which can contain data from multiple coil elements.
-An example file can be found in the images folder (obtained from [Harvard SMURF public domain repository](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/XNMCYI) [1]).
+An example file can be found in the `images` folder (obtained from [Harvard SMURF public domain repository](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/XNMCYI) [1]).
 
 The raw data file can be loaded just like a normal image - drag & drop or using the Open New Image dialog.
 
@@ -197,8 +198,8 @@ np.save(save_as, array_to_save, allow_pickle=False)
 If the app does not behave as expected, 
 you can [post issues here](https://github.com/birogeri/kspace-explorer/issues) with your GitHub account.
 
-To help diagnose the prbolem, please try and run it with logging enabled.
-To enable logging mode, run K-space Explorer with `--log` command line argument.
+To help diagnose the problem, please try and run K-space Explorer with logging enabled.
+To enable logging mode, run the app with the `--log` command line argument.
 
 ``` shell
     python kspace.py --log
@@ -206,7 +207,7 @@ To enable logging mode, run K-space Explorer with `--log` command line argument.
 
 The file `kspace.log` will be populated with debugging information.
 You can then [upload the contents of the file here](https://gist.github.com/) 
-and add a link of the published log in your issue.
+and include a link to the published log in your issue.
 
 ---
 
@@ -234,14 +235,14 @@ The aim of K-space Explorer is to provide a smooth, modern UI with familiar tool
 
 ### Free and Open Source
 
-To get a deeper understanding of the inner workings the code can be inspected. In-line documentation can help understanding the mathematical principles behind various interactions.
+To get a deeper understanding of the inner workings the code can be inspected. In-line documentation can help in the understanding of the mathematical principles behind various interactions.
 
 ---
 
 ## Latest changes
 
 * Basic logging
-* View raw data with images from a multi-channel acquisition
+* View raw data with images from a multichannel acquisition
 
 ## Known bugs
 
@@ -272,7 +273,7 @@ applied by the scanner software.
 ```references
     [1] Bachrata, Beata, 2020, "SMURF (raw MRI data)", https://doi.org/10.7910/DVN/XNMCYI, Harvard Dataverse, V3
     
-    [2] Moratal, D., Vallés-Luch, A., Martí-Bonmati, L., & Brummers, M. E. (2008). k-Space tutorial: An MRI educational tool for a better understanding of k-space. Biomedical Imaging and Intervention Journal, 4(1). http://doi.org/10.2349/biij.4.1.e15
+    [2] Moratal, D., Vallés-Luch, A., Martí-Bonmati, L., & Brummers, M. E. (2008). k-Space tutorial: An MRI educational tool for a better understanding of k-space. Biomedical Imaging and Intervention Journal, 4(1). https://doi.org/10.2349/biij.4.1.e15
 
     [3] Qureshi, M., Kaleem, M., & Omer, H. (2017). Journey through k-space: An interactive educational tool. Biomedical Research (India), 28(4), 1618–1623.
 
