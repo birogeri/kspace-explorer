@@ -10,7 +10,10 @@ K-space Explorer is written in Python 3 and uses open source libraries, so
 it can be used for free and the source code can be inspected to peek under
 the hood.
 
-The software has many useful features, such as:
+**To try some features of the desktop app, you can now visit the [K-Space Explorer Online](https://share.streamlit.io/birogeri/kspace-explorer-streamlit/kspace.py)**  
+(this version is also on [GitHub](https://github.com/birogeri/kspace-explorer-streamlit))
+
+The desktop app has many useful features, such as:
 
 * A modern responsive user interface using Qt
 * Automatic Fourier transform to instantaneously visualise changes
@@ -23,6 +26,7 @@ The software has many useful features, such as:
 If you find it useful please consider [buying me a coffee with PayPal](https://www.paypal.me/birogeri/5gbp) ☕
 
 ---
+
 
 ## **Contents**
 * [Installation](#installation)
