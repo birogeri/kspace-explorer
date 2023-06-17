@@ -92,7 +92,7 @@ ApplicationWindow {
                         visible: false
                         selectMultiple: false
                         selectExisting: false
-                        nameFilters: [ "PNG file (*.png)", "Floating point TIFF (*.tiff)" ]
+                        nameFilters: [ "PNG file (*.png)", "JPG file (*.jpg)", "Floating point TIFF (*.tiff)" ]
                         title: qsTr("Save files")
                         //: Save dialog title bar
                         onAccepted: {

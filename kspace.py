@@ -684,7 +684,7 @@ class MainApp(QObject):
         im = self.img_instances[int(channel)]
         self.update_displays()
 
-    @pyqtSlot(str, name="save_img")
+    @pyqtSlot(QVariant, name="save_img")
     def save_img(self, path):
         """Saves the visible kspace and image to files
 
@@ -692,19 +692,31 @@ class MainApp(QObject):
         the PNG file will have a depth of 8 bits.
 
         Parameters:
-            path (str): QUrl format file location (starts with "file:///")
+            path (QVariant): QUrl format file location
         """
         import os.path
-        filename, ext = os.path.splitext(path[8:])  # Remove QUrl's "file:///"
+        filename, ext = os.path.splitext(path.toLocalFile())
+        log.info(f'Saving to file. Requested path: {filename}, format: {ext}')
         k_path = filename + '_k' + ext
         i_path = filename + '_i' + ext
         if ext.lower() == '.tiff':
-            Image.fromarray(im.img).save(i_path)
-            Image.fromarray(im.kspace_display_data).save(k_path)
-        elif ext == '.png':
-            Image.fromarray(im.img).convert(mode='L').save(i_path)
-            Image.fromarray(im.kspace_display_data).convert(mode='L').save(
-                k_path)
+            img_to_export = Image.fromarray(im.img)
+            ksp_to_export = Image.fromarray(im.kspace_display_data)
+        else:
+            log.info(f'Converting image for export')
+            img_to_export = Image.fromarray(im.img).convert(mode='L')
+            log.info(f'Converting k-space for export')
+            ksp_to_export = Image.fromarray(im.kspace_display_data).convert(mode='L')
+
+        try:
+            log.info(f'Attempting to export image')
+            img_to_export.save(i_path)
+            log.info(f'Attempting to export k-space')
+            ksp_to_export.save(k_path)
+            log.info(f'Saving images successful')
+        except Exception as e:
+            log.error("Failed to save file", exc_info=True)
+            raise e
 
     @pyqtSlot(QVariant, QVariant, name="add_spike")
     def add_spike(self, mouse_x, mouse_y):
